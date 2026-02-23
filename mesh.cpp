@@ -49,6 +49,7 @@ void Mesh::draw(Shader &shader, glm::mat4 model, glm::mat4 view, glm::mat4 proje
     shader.setMat4("model", model);
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
+    shader.setMat3("normalMat", glm::transpose(glm::inverse(glm::mat3(model))));
 
     glBindVertexArray(VAO);
     

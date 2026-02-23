@@ -9,7 +9,7 @@
 
 #include "shader.hpp"
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath) {
+Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath) {
 
     std::ifstream vShaderFile;
     std::ifstream fShaderFile;
@@ -115,5 +115,9 @@ void Shader::setVec3(const std::string &name, glm::vec3 v) const {
 
 void Shader::setMat4(const std::string &name, glm::mat4 value) const {
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void Shader::setMat3(const std::string &name, glm::mat3 value) const {
+    glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
 }
 

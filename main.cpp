@@ -5,9 +5,16 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <string>
 
-#define SCR_WIDTH 800
-#define SCR_HEIGHT 600
+#include "camera.hpp"
+#include "shader.hpp"
+#include "model.hpp"
+
+constexpr float SCR_WIDTH = 800;
+constexpr float SCR_HEIGHT = 600;
+
+Camera camera = Camera(glm::vec3(0.0, 0.0, 5.0), SCR_WIDTH/SCR_HEIGHT);
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -20,7 +27,10 @@ void processInput(GLFWwindow *window) {
 }
 
 void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
-
+    static float lastX, lastY;
+    camera.processMouse(xpos - lastX, ypos - lastY);
+    lastX = xpos;
+    lastY = ypos;
 }
 
 int main() {
@@ -56,7 +66,14 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
 
+    // -------------------------------------------- Shaders and Models --------------------------------------------
+    std::string shaderBasePath = std::string(ASSETS_DIR) + "shaders/"; 
+    Shader lightSourceShader = Shader(shaderBasePath + "vertexShader.vert", shaderBasePath + "lightSource.frag");
 
+    Shader litShader = Shader(shaderBasePath + "vertexShader.vert", shaderBasePath + "lit.frag");
+
+    std::string modelBasePath = std::string(ASSETS_DIR) + "models/";
+    Model model = Model(modelBasePath + "Monkey.obj");
 
     while(!glfwWindowShouldClose(window)) {
         processInput(window);
@@ -64,19 +81,35 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // Draw stuff
+
+        glm::mat4 view = camera.getLookatMat();
+        glm::mat4 projection = camera.getProjectionMat();
+        model.draw(litShader, view, projection);
 
 
 
 
+        // ...
+        ImGui::Begin("My name is window, ImGUI window", NULL, ImGuiWindowFlags_NoSavedSettings);
+        ImGui::Text("Hello there adventurer");
+        ImGui::End();
 
-
-
-
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwTerminate();
     return 0;

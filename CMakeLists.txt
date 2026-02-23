@@ -4,7 +4,7 @@ project(GLRenderer)
 
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-SET(SOURCES main.cpp thirdparty/glad.c shader.cpp model.cpp mesh.cpp)
+SET(SOURCES main.cpp thirdparty/glad.c shader.cpp model.cpp mesh.cpp camera.cpp)
 
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)

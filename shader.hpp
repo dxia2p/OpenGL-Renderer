@@ -9,7 +9,7 @@ class Shader {
 public:
     unsigned int ID;
 
-    Shader(const char* vertexPath, const char* fragmentPath);
+    Shader(const std::string &vertexPath, const std::string &fragmentPath);
     //~Shader();
     
     // Activate the shader
@@ -21,6 +21,7 @@ public:
     void setVec3(const std::string &name, float x, float y, float z) const;
     void setVec3(const std::string &name, glm::vec3 v) const;
     void setMat4(const std::string &name, glm::mat4 value) const;
+    void setMat3(const std::string &name, glm::mat3 value) const;
 };
 
 
