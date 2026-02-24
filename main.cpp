@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -14,6 +15,12 @@
 constexpr float SCR_WIDTH = 800;
 constexpr float SCR_HEIGHT = 600;
 
+float deltaTime = 0;
+float prevFrameTime = 0;
+
+bool holdingRightClick = false;
+
+float cameraMoveSpeed = 4.0f;
 Camera camera = Camera(glm::vec3(0.0, 0.0, 5.0), SCR_WIDTH/SCR_HEIGHT);
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
@@ -24,11 +31,41 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
         glfwSetWindowShouldClose(window, true);
     }
+
+    int rmbState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+    if (rmbState == GLFW_PRESS) {
+        holdingRightClick = true;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    } else if (rmbState == GLFW_RELEASE) {
+        holdingRightClick = false;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+
+    glm::vec2 moveDir = glm::vec2(0);
+    if (glfwGetKey(window, GLFW_KEY_W)) {
+        moveDir.y += 1;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S)) {
+        moveDir.y -= 1;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A)) {
+        moveDir.x -= 1;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D)) {
+        moveDir.x += 1;
+    }
+
+    if (moveDir.x != 0 || moveDir.y != 0)
+        moveDir = glm::normalize(moveDir);
+    moveDir *= cameraMoveSpeed;
+    camera.position += deltaTime * moveDir.y * camera.getFront();
+    camera.position += deltaTime * moveDir.x * camera.getRight();
 }
 
 void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
-    static float lastX, lastY;
-    camera.processMouse(xpos - lastX, ypos - lastY);
+    static double lastX, lastY;
+    if (holdingRightClick)
+        camera.processMouse(xpos - lastX, ypos - lastY);
     lastX = xpos;
     lastY = ypos;
 }
@@ -73,9 +110,13 @@ int main() {
     Shader litShader = Shader(shaderBasePath + "vertexShader.vert", shaderBasePath + "lit.frag");
 
     std::string modelBasePath = std::string(ASSETS_DIR) + "models/";
-    Model model = Model(modelBasePath + "Monkey.obj");
+    Model model = Model(modelBasePath + "Torus.obj");
 
+    glEnable(GL_DEPTH_TEST);
     while(!glfwWindowShouldClose(window)) {
+        deltaTime = glfwGetTime() - prevFrameTime;
+        prevFrameTime = glfwGetTime();
+        
         processInput(window);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -91,12 +132,10 @@ int main() {
         glm::mat4 projection = camera.getProjectionMat();
         model.draw(litShader, view, projection);
 
-
-
-
         // ...
         ImGui::Begin("My name is window, ImGUI window", NULL, ImGuiWindowFlags_NoSavedSettings);
         ImGui::Text("Hello there adventurer");
+        ImGui::Text("Camera position: (%f, %f, %f)", camera.position.x, camera.position.y, camera.position.z);
         ImGui::End();
 
         ImGui::Render();

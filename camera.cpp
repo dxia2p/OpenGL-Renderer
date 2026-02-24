@@ -13,8 +13,8 @@ glm::mat4 Camera::getProjectionMat() const {
 }
 
 void Camera::processMouse(float dx, float dy) {
-    pitch += dx * sensitivity;
-    yaw += dy * sensitivity;
+    pitch -= dy * sensitivity;
+    yaw += dx * sensitivity;
     
     pitch = glm::clamp(pitch, MIN_PITCH, MAX_PITCH);
     yaw = std::fmod(yaw, 360);

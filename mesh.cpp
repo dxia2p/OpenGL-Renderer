@@ -26,7 +26,7 @@ Mesh::Mesh(const std::vector<Vertex> &vertices, const std::vector<unsigned int> 
     // Send data to buffers
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
@@ -40,8 +40,11 @@ Mesh::Mesh(const std::vector<Vertex> &vertices, const std::vector<unsigned int> 
     glBindVertexArray(0);
 
     
+    // Update indexCount
+    indexCount = indices.size();
     // Handle textures
     this->textures = textures;
+    std::cout << "VERTEX COUNT: " << vertices.size() << std::endl;
 }
 
 void Mesh::draw(Shader &shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection) const {

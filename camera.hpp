@@ -1,10 +1,11 @@
+#include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 
 class Camera {
 public:
-    glm::vec3 position;
+    glm::vec3 position = glm::vec3(0);
     // Yaw, pitch and fov are in degrees
-    float yaw, pitch, sensitivity, fov, nearPlane = 0.2, farPlane = 100.0;
+    float yaw = -90.0f, pitch = 0.0f, sensitivity = 0.1f, fov = 60.0f, nearPlane = 0.2, farPlane = 100.0;
     const float MAX_PITCH = 89.0f, MIN_PITCH = -89.0f;
 
     Camera(glm::vec3 pos, float aspectRatio) : position(pos), aspectRatio(aspectRatio) {}
@@ -27,6 +28,6 @@ public:
     glm::vec3 getRight() { return right; }
     glm::vec3 getFront() { return front; }
 private:
-    glm::vec3 up, right, front;
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), right = glm::vec3(1.0f, 0.0f, 0.0f), front = glm::vec3(0.0f, 0.0f, -1.0f);
     float aspectRatio;
 };

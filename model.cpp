@@ -11,9 +11,9 @@ Model::Model(const std::string &filePath) {
 }
 
 void Model::draw(Shader &shader, glm::mat4 view, glm::mat4 projection) const {
-    glm::mat4 model = glm::mat4_cast(rotation);
+    glm::mat4 model = glm::scale(glm::mat4(1), scale);
     model = glm::translate(model, position);
-    model = glm::scale(model, scale);
+    model = model * glm::mat4_cast(rotation);
     for(int i = 0; i < meshes.size(); i++) {
         meshes[i].draw(shader, model, view, projection);
     }

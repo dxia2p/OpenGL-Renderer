@@ -14,7 +14,7 @@
 class Model {
 public:
     glm::vec3 position = glm::vec3(0), scale = glm::vec3(1);
-    glm::quat rotation;
+    glm::quat rotation = glm::quat(glm::vec3(0));
 
     Model(const std::string &filePath);
     void draw(Shader &shader, glm::mat4 view, glm::mat4 projection) const;
