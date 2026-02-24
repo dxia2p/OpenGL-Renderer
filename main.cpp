@@ -108,9 +108,14 @@ int main() {
     Shader lightSourceShader = Shader(shaderBasePath + "vertexShader.vert", shaderBasePath + "lightSource.frag");
 
     Shader litShader = Shader(shaderBasePath + "vertexShader.vert", shaderBasePath + "lit.frag");
+    litShader.use();
+    litShader.setVec3("directionalLight.ambient", 0.1f, 0.1f, 0.1f);
+    litShader.setVec3("directionalLight.diffuse", 0.5f, 0.5f, 0.5f);
+    litShader.setVec3("directionalLight.specular", 0.5f, 0.5f, 0.5f);
+    litShader.setVec3("directionalLight.direction", 1.0f, -1.0f, -1.0f);
 
     std::string modelBasePath = std::string(ASSETS_DIR) + "models/";
-    Model model = Model(modelBasePath + "Torus.obj");
+    Model model = Model(modelBasePath + "Monkey.obj");
 
     glEnable(GL_DEPTH_TEST);
     while(!glfwWindowShouldClose(window)) {
