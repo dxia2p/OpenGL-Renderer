@@ -44,7 +44,6 @@ Mesh::Mesh(const std::vector<Vertex> &vertices, const std::vector<unsigned int> 
     indexCount = indices.size();
     // Handle textures
     this->textures = textures;
-    std::cout << "VERTEX COUNT: " << vertices.size() << std::endl;
 }
 
 void Mesh::draw(Shader &shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection) const {

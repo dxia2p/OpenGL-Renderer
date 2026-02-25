@@ -93,31 +93,45 @@ void Shader::use() {
 }
 
 void Shader::setBool(const std::string& name, bool value) const {
+    checkShaderActive();
     int uniformLocation = glGetUniformLocation(ID, name.c_str());
     glUniform1i(uniformLocation, (int)value);
 }
 
 void Shader::setInt(const std::string& name, int value) const {
+    checkShaderActive();
     glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
 }
 
 void Shader::setFloat(const std::string& name, float value) const {
+    checkShaderActive();
     glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 }
 
 void Shader::setVec3(const std::string &name, float x, float y, float z) const {
+    checkShaderActive();
     glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
 }
 
 void Shader::setVec3(const std::string &name, glm::vec3 v) const {
+    checkShaderActive();
     glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(v));
 }
 
 void Shader::setMat4(const std::string &name, glm::mat4 value) const {
+    checkShaderActive();
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
 }
 
 void Shader::setMat3(const std::string &name, glm::mat3 value) const {
+    checkShaderActive();
     glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
 }
 
+void Shader::checkShaderActive() const {
+    int programId;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &programId);
+    if (programId != ID) {
+        std::cerr << "Shader [" << ID << "] is not in use, cannot set uniform on it" << std::endl;
+    }
+}
