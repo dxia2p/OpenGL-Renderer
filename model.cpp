@@ -4,19 +4,16 @@
 #include <glad/glad.h>
 #include <assimp/postprocess.h>
 
+// ------------------------------------------------ Prototypes ------------------------------------------------
+
 static unsigned int TextureFromFile(std::string path);
 
-Model::Model(const std::string &filePath) {
-    importModel(filePath);
-}
 
-void Model::draw(Shader &shader, glm::mat4 view, glm::mat4 projection) const {
-    glm::mat4 model = glm::scale(glm::mat4(1), scale);
-    model = glm::translate(model, position);
-    model = model * glm::mat4_cast(rotation);
-    for(int i = 0; i < meshes.size(); i++) {
-        meshes[i].draw(shader, model, view, projection);
-    }
+// ------------------------------------------------ Model ------------------------------------------------
+
+Model::Model(const std::string &path) {
+    importModel(path);
+    defaultMaterial = 
 }
 
 void Model::importModel(const std::string &filePath) {
@@ -95,7 +92,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
     }
 
-    return Mesh(vertices, indices, textures);
+    return Mesh(vertices, indices);
 }
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, TextureTypes typeName) {
@@ -160,3 +157,5 @@ static unsigned int TextureFromFile(std::string path) {
 
     return id;
 }
+
+// ------------------------------------------------ Model Instance ------------------------------------------------

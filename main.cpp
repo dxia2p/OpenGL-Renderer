@@ -44,24 +44,25 @@ void processInput(GLFWwindow *window) {
     }
 
     glm::vec2 moveDir = glm::vec2(0);
-    if (glfwGetKey(window, GLFW_KEY_W)) {
-        moveDir.y += 1;
-    }
-    if (glfwGetKey(window, GLFW_KEY_S)) {
+    if (glfwGetKey(window, GLFW_KEY_W))
+        moveDir.y += 1; 
+    if (glfwGetKey(window, GLFW_KEY_S))
         moveDir.y -= 1;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A)) {
+    if (glfwGetKey(window, GLFW_KEY_A))
         moveDir.x -= 1;
-    }
-    if (glfwGetKey(window, GLFW_KEY_D)) {
+    if (glfwGetKey(window, GLFW_KEY_D))
         moveDir.x += 1;
-    }
 
     if (moveDir.x != 0 || moveDir.y != 0)
         moveDir = glm::normalize(moveDir);
     moveDir *= cameraMoveSpeed;
     camera.position += deltaTime * moveDir.y * camera.getFront();
     camera.position += deltaTime * moveDir.x * camera.getRight();
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
+        camera.position += deltaTime * camera.getUp();
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL))
+        camera.position -= deltaTime * camera.getUp();
 }
 
 void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
@@ -152,6 +153,7 @@ int main() {
     std::string selectedModel;
     int selectedModelIndex;
     // -------------------------------------------- Main Loop --------------------------------------------
+
     while(!glfwWindowShouldClose(window)) {
         deltaTime = glfwGetTime() - prevFrameTime;
         prevFrameTime = glfwGetTime();
