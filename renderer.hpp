@@ -3,7 +3,7 @@
 
 #include "camera.hpp"
 #include "model.hpp"
-#include <memory>
+#include "light.hpp"
 
 class Renderer {
 public:
@@ -11,7 +11,7 @@ public:
 
     Renderer();
 
-    void render(const std::vector<ModelInstance> &modelInstances);
+    void render(const std::vector<ModelInstance> &modelInstances, const std::vector<LightData> &lightDataList);
 
     void setCamera(Camera *camera) { this->camera = camera; }
 

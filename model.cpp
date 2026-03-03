@@ -4,6 +4,8 @@
 #include <glad/glad.h>
 #include <assimp/postprocess.h>
 
+#include "material.hpp"
+
 // ------------------------------------------------ Prototypes ------------------------------------------------
 
 static unsigned int TextureFromFile(std::string path);
@@ -11,9 +13,8 @@ static unsigned int TextureFromFile(std::string path);
 
 // ------------------------------------------------ Model ------------------------------------------------
 
-Model::Model(const std::string &path) {
+Model::Model(const std::string &path, Shader *defaultShader) : defaultShader(defaultShader) {
     importModel(path);
-    defaultMaterial = 
 }
 
 void Model::importModel(const std::string &filePath) {
@@ -37,7 +38,8 @@ void Model::processNode(aiNode *node, const aiScene *scene) {
     // Process each mesh pointed to by the node
     for(int i = 0; i < node->mNumMeshes; i++) {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-        meshes.push_back(processMesh(mesh, scene));
+        std::pair<int, Mesh> meshIndexPair = processMesh(mesh, scene);
+        meshes[meshIndexPair.first].push_back(meshIndexPair.second);
     }
     // Do the same for all other nodes
     for(int i = 0; i < node->mNumChildren; i++) {
@@ -45,10 +47,10 @@ void Model::processNode(aiNode *node, const aiScene *scene) {
     }
 }
 
-Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
+std::pair<int, Mesh> Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    std::vector<Texture> textures;
+    int materialIndex;
 
     // Process vertices, normals and UVs
     for(int i = 0; i < mesh->mNumVertices; i++) {
@@ -83,16 +85,25 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 
     // Process material
     if (mesh->mMaterialIndex >= 0) {
-        aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-        std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, TextureTypes::Diffuse);
-
-        std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, TextureTypes::Specular);
-
-        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+        aiMaterial *assimpMaterial = scene->mMaterials[mesh->mMaterialIndex];
+        std::vector<Texture> diffuseMaps = loadMaterialTextures(assimpMaterial, aiTextureType_DIFFUSE, TextureTypes::Diffuse);
+        std::vector<Texture> specularMaps = loadMaterialTextures(assimpMaterial, aiTextureType_SPECULAR, TextureTypes::Specular);
+        
+        Material material = Material(32.0f, diffuseMaps[0], specularMaps[0], defaultShader);
+        bool newMaterial = true;
+        for(int i = 0; i < defaultMaterials.size(); i++) {
+            if (defaultMaterials[i] == material) {
+                materialIndex = i;
+                newMaterial = false;
+            }
+        }
+        if (newMaterial) { 
+            defaultMaterials.push_back(material);
+            materialIndex = defaultMaterials.size() - 1;
+        }
     }
 
-    return Mesh(vertices, indices);
+    return std::pair<int, Mesh>(materialIndex, Mesh(vertices, indices));
 }
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, TextureTypes typeName) {

@@ -23,7 +23,7 @@ Renderer::Renderer() {
 }
 
 
-void Renderer::render(const std::vector<ModelInstance> &modelInstances) {
+void Renderer::render(const std::vector<ModelInstance> &modelInstances, const std::vector<LightData> &lightDataList) {
     // Set view and projection matrices
     if (camera == nullptr) {
         std::cerr << "Renderer::render failed because camera is null!" << std::endl;
@@ -34,8 +34,16 @@ void Renderer::render(const std::vector<ModelInstance> &modelInstances) {
     glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(view));
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(projection));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    //glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 
     // Send lights to uboLights
+    glBindBuffer(GL_UNIFORM_BUFFER, uboLights);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightData) * lightDataList.size(), lightDataList.data());
+    
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+
+    // Render model instances
+
 }
