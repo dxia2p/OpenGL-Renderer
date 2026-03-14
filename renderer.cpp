@@ -1,5 +1,7 @@
 #include "renderer.hpp"
 #include "light.hpp"
+#include "material.hpp"
+#include "mesh.hpp"
 #include <iostream>
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -43,7 +45,13 @@ void Renderer::render(const std::vector<ModelInstance> &modelInstances, const st
     
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-
     // Render model instances
+    for(int i = 0; i < modelInstances.size(); i++) {
+        const Model *model = modelInstances[i].getModel();
+        const std::map<int, std::vector<Mesh>> &meshes = model->getMeshes();
+        const std::vector<Material> &modelDefaultMaterials = model->getDefaultMaterials();
+        for(auto i = meshes.begin(); i != meshes.end(); i++) {
 
+        }
+    }
 }
