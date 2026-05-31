@@ -2,12 +2,12 @@
 #define MESH_H
 
 #include <vector>
+#include <memory>
+
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+
 #include "material.hpp"
-
-
-std::string getShaderTextureUniformName(TextureTypes type, int index);
-
 
 struct Vertex {
     glm::vec3 position;
@@ -17,11 +17,19 @@ struct Vertex {
 
 class Mesh {
 public:
-    Mesh(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &indices);
+    Mesh(glm::vec3 position, std::shared_ptr<Material> material, const std::vector<Vertex> &vertices, const std::vector<unsigned int> &indices);
 
+    glm::vec3 position = glm::vec3(0.0), scale = glm::vec3(0.0);
+    glm::quat rotation = glm::quat(1, 0, 0, 0);
+    //std::vector<Vertex> vertices;
+    //std::vector<unsigned int> indices;
+    std::shared_ptr<Material> material;
+
+    unsigned int getVAO() { return VAO; }
 private:
     unsigned int VAO, VBO, EBO;
     unsigned int indexCount;
 };
+
 
 #endif

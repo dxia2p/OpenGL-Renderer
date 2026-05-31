@@ -169,4 +169,3 @@ static unsigned int TextureFromFile(std::string path) {
     return id;
 }
 
-// ------------------------------------------------ Model Instance ------------------------------------------------

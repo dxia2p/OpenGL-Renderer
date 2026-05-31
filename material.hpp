@@ -6,14 +6,14 @@
 #include "shader.hpp"
 
 constexpr int TEXTURE_TYPES_SIZE = 2;
-enum class TextureTypes {
+enum class TextureType {
     Diffuse = 0,
     Specular
 };
 
 struct Texture {
     unsigned int id;
-    TextureTypes textureType;
+    TextureType textureType;
     std::string path;
 };
 

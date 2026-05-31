@@ -23,6 +23,7 @@ public:
     void setMat4(const std::string &name, glm::mat4 value) const;
     void setMat3(const std::string &name, glm::mat3 value) const;
 
+private:
     // Checks if the shader is activated and outputs error message if it isn't
     // Meant to be used in setUniform functions
     void checkShaderActive() const;

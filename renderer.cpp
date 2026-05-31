@@ -25,6 +25,7 @@ Renderer::Renderer() {
 }
 
 
+/*
 void Renderer::render(const std::vector<ModelInstance> &modelInstances, const std::vector<LightData> &lightDataList) {
     // Set view and projection matrices
     if (camera == nullptr) {
@@ -55,3 +56,4 @@ void Renderer::render(const std::vector<ModelInstance> &modelInstances, const st
         }
     }
 }
+*/

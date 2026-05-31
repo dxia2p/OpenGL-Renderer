@@ -40,17 +40,4 @@ private:
 };
 
 
-class ModelInstance {
-public:
-    glm::vec3 position, scale;
-    glm::quat rotation = glm::quat(glm::vec3(0));
-
-    ModelInstance(Model *model, glm::vec3 position = glm::vec3(0), glm::vec3 rotation = glm::vec3(0), glm::vec3 scale = glm::vec3(1, 1, 1)) : model(model), position(position), rotation(glm::quat(rotation)), scale(scale) {}
-
-    const Model* getModel() const { return model; }
-private:
-    Model *model;
-};
-
-
 #endif
