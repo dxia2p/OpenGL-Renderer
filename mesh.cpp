@@ -1,4 +1,5 @@
 #include <glad/glad.h>
+#include <glm/ext/matrix_transform.hpp>
 
 #include "mesh.hpp"
 
@@ -28,4 +29,13 @@ Mesh::Mesh(glm::vec3 position, std::shared_ptr<Material> material, const std::ve
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), indices.data(), GL_STATIC_DRAW);
 
     glBindVertexArray(0);
+}
+
+
+glm::mat4 Mesh::getModelMatrix() {
+    glm::mat4 result = glm::mat4(1.0);
+    result = glm::scale(result, scale);
+    result = glm::mat4_cast(rotation) * result;
+    result = glm::translate(result, position);
+    return result;
 }

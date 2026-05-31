@@ -41,6 +41,8 @@ std::vector<Mesh> ModelLoader::load(const std::string &path, Shader *defaultShad
     // Set currentDirectory
     size_t lastSlash = path.find_last_of('/');
     currentDirectory = path.substr(0, lastSlash + 1);  // Add one to lastSlash to keep the slash at the end
+    
+    this->defaultShader = defaultShader;
 
     std::vector<Mesh> meshes;
     processNode(scene->mRootNode, scene, meshes);
@@ -116,11 +118,16 @@ Mesh ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene) {
 
 Texture ModelLoader::loadTextures(aiMaterial *mat, aiTextureType aiType, TextureType internalType) {
     Texture result;
-    // This function only gets the first texture of the given type in the material (for now)
-    aiString str;
-    mat->GetTexture(aiType, 0, &str);  // GetTexture puts relative path into str (most of the time)
-    result.id = textureFromFile(currentDirectory + str.C_Str(), (aiType == aiTextureType_DIFFUSE) ? GL_RGB : GL_R);  // TODO: Change this to handle more texture types
-    result.textureType = internalType;
-    result.path = str.C_Str();
+    if (mat->GetTextureCount(aiType) > 0) {
+        // This function only gets the first texture of the given type in the material (for now)
+        aiString str;
+        mat->GetTexture(aiType, 0, &str);  // GetTexture puts relative path into str (most of the time)
+        result.id = textureFromFile(currentDirectory + str.C_Str(), (aiType == aiTextureType_DIFFUSE) ? GL_RGB : GL_R);  // TODO: Change this to handle more texture types
+        result.textureType = internalType;
+        result.path = str.C_Str();
+
+    } else {
+        result.textureType = TextureType::None;
+    }
     return result;
 }

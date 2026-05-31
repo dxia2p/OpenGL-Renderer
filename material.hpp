@@ -8,7 +8,8 @@
 constexpr int TEXTURE_TYPES_SIZE = 2;
 enum class TextureType {
     Diffuse = 0,
-    Specular
+    Specular,
+    None
 };
 
 struct Texture {

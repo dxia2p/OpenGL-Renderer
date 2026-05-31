@@ -1,5 +1,5 @@
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef MODELLOADER_H
+#define MODELLOADER_H
 
 #include <map>
 #include <string>
@@ -12,7 +12,7 @@
 
 class ModelLoader {
 public:
-    ModelLoader();
+    ModelLoader() {}
     
     std::vector<Mesh> load(const std::string &path, Shader *defaultShader);
 private:
