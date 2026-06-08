@@ -12,8 +12,8 @@ enum class LightTypes {
 };
 
 // This mimics the LightData struct inside fragment shaders
-// It will be used to pass data to the fragment shader VIA a uniform buffer object
-struct LightData {
+// It will be used to pass data to the fragment shader via a uniform buffer object
+struct LightData {  // Needs to be aligned to 16 byte boundaries because we use std140 layout in the shader
     alignas(16) glm::vec3 position;
     alignas(16) glm::vec3 direction;
     alignas(16) glm::vec3 color;

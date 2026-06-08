@@ -12,11 +12,11 @@ find_package(imgui CONFIG REQUIRED)
 
 if(${TEST})
 
-    set(SOURCES testMain.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp)
+    set(SOURCES testMain.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp renderer.cpp)
 
 else()
 
-    SET(SOURCES main.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp)
+    SET(SOURCES main.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp, renderer.cpp)
 
 endif()
 

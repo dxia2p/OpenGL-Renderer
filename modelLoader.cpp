@@ -2,9 +2,11 @@
 
 #include <assimp/material.h>
 #include <iostream>
+#include <iterator>
 #include <memory>
 
 #include "material.hpp"
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "glad/glad.h"
 
@@ -105,8 +107,8 @@ Mesh ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene) {
         Texture specularMap = loadTextures(material, aiTextureType_SPECULAR, TextureType::Specular);
         // Make material for the mesh
         meshMaterial = std::make_shared<Material>();
-        meshMaterial->diffuseMap = diffuseMap;
-        meshMaterial->specularMap = specularMap;
+        meshMaterial->setDiffuseTexture(diffuseMap);
+        meshMaterial->setSpecularTexture(specularMap);
         meshMaterial->color = glm::vec3(1);
         meshMaterial->shader = defaultShader;
         meshMaterial->shininess = 32;  // TODO: Change this
@@ -122,9 +124,16 @@ Texture ModelLoader::loadTextures(aiMaterial *mat, aiTextureType aiType, Texture
         // This function only gets the first texture of the given type in the material (for now)
         aiString str;
         mat->GetTexture(aiType, 0, &str);  // GetTexture puts relative path into str (most of the time)
-        result.id = textureFromFile(currentDirectory + str.C_Str(), (aiType == aiTextureType_DIFFUSE) ? GL_RGB : GL_R);  // TODO: Change this to handle more texture types
-        result.textureType = internalType;
-        result.path = str.C_Str();
+        std::string textureDir = currentDirectory + str.C_Str();
+        std::unordered_map<std::string, Texture>::iterator it = loadedTextures.find(textureDir); 
+        if (it != loadedTextures.end()) {
+            result = loadedTextures[textureDir];
+        } else {
+            result.id = textureFromFile(textureDir, (aiType == aiTextureType_DIFFUSE) ? GL_RGB : GL_R);  // TODO: Change this to handle more texture types
+            result.textureType = internalType;
+            result.path = textureDir;
+            loadedTextures[textureDir] = result;
+        }
 
     } else {
         result.textureType = TextureType::None;

@@ -16,7 +16,7 @@ public:
     
     std::vector<Mesh> load(const std::string &path, Shader *defaultShader);
 private:
-    std::map<std::string, Texture> texturesLoaded;
+    std::unordered_map<std::string, Texture> loadedTextures;
     std::string currentDirectory;  // currentDirectory includes a slash at the end
     Shader *defaultShader;  // Stores a default shader we put into created materials
 

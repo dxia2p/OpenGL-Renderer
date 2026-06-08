@@ -3,19 +3,22 @@
 
 #include "camera.hpp"
 #include "light.hpp"
+#include "mesh.hpp"
+
 
 class Renderer {
 public:
-    static constexpr int MAX_LIGHT_COUNT = 32;
+    static constexpr unsigned int MAX_LIGHT_COUNT = 16;
+    static constexpr unsigned int MATRICES_UBO_BINDING_POINT = 0;
+    static constexpr unsigned int LIGHTS_UBO_BINDING_POINT = 1;
 
     Renderer();
-
-    //void render(const std::vector<ModelInstance> &modelInstances, const std::vector<LightData> &lightDataList);
+    void draw(std::vector<Mesh> &meshes, std::vector<Light> &lights);
 
     void setCamera(Camera *camera) { this->camera = camera; }
 
 private:
-    unsigned int uboMatrices, uboLights;
+    unsigned int matricesUBO, lightsUBO;
     Camera *camera;
 };
 

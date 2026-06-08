@@ -7,6 +7,7 @@
 #include "modelLoader.hpp"
 #include "mesh.hpp"
 #include "shader.hpp"
+#include "renderer.hpp"
 
 float deltaTime = 0;
 float prevTime = 0;
@@ -34,7 +35,7 @@ void processInput(GLFWwindow *window) {
     }
 
     // Camera keyboard movement
-    float cameraSpeed = 0.5f;
+    float cameraSpeed = 4.0f;
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         cam.position += cam.getFront() * deltaTime * cameraSpeed;       
     }
@@ -84,8 +85,9 @@ int main() {
     // ------------------------------------------------------------ Set up mesh, camera and shaders ------------------------------------------------------------
     Shader shader(std::string(ASSETS_DIR) + "shaders/test.vert", std::string(ASSETS_DIR) + "shaders/test.frag");
     ModelLoader loader;
-    std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/Monkey.obj", &shader);
-
+    std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/backpack/backpack.obj", &shader);
+    Renderer renderer;
+    renderer.setCamera(&cam);
     
 
     while (!glfwWindowShouldClose(window)) {
@@ -96,15 +98,7 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        for(int i = 0; i < meshes.size(); i++) {
-            Mesh testMesh = meshes[i];
-            glBindVertexArray(testMesh.getVAO());
-            testMesh.material->shader->use();
-            testMesh.material->shader->setMat4("model", testMesh.getModelMatrix());
-            testMesh.material->shader->setMat4("view", cam.getLookatMat());
-            testMesh.material->shader->setMat4("projection", cam.getProjectionMat());
-            glDrawElements(GL_TRIANGLES, testMesh.getIndexCount(), GL_UNSIGNED_INT, 0);
-        }
+        renderer.draw(meshes);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
