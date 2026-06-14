@@ -2,6 +2,7 @@
 
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
+#include <memory>
 
 #include "camera.hpp"
 #include "modelLoader.hpp"
@@ -63,6 +64,9 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #ifdef DEBUG_MODE
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+    #endif
 
     GLFWwindow *window = glfwCreateWindow(800, 600, "Test", NULL, NULL);
     if (window == NULL) {
@@ -86,6 +90,8 @@ int main() {
     Shader shader(std::string(ASSETS_DIR) + "shaders/test.vert", std::string(ASSETS_DIR) + "shaders/test.frag");
     ModelLoader loader;
     std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/backpack/backpack.obj", &shader);
+    std::vector<std::unique_ptr<Light>> lights;
+    lights.push_back(std::make_unique<DirectionalLight>(glm::vec3(0, 1, 0), 1.0f, 1.0f, 1.0f, glm::vec3(1, -1, 0)));
     Renderer renderer;
     renderer.setCamera(&cam);
     
@@ -98,7 +104,7 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        renderer.draw(meshes);
+        renderer.draw(meshes, lights);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

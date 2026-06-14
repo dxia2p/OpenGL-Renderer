@@ -3,7 +3,6 @@
 
 #include <glm/glm.hpp>
 
-#include "shader.hpp"
 
 enum class LightTypes {
     DIRECTIONAL = 0,
@@ -20,6 +19,10 @@ struct LightData {  // Needs to be aligned to 16 byte boundaries because we use 
     alignas(16) glm::vec4 ambientDiffuseSpecularLightType;  // Multipliers for ambient, diffuse and specular, w = light type (follows enum class LightTypes)
     alignas(16) glm::vec4 cutoffsAndAttenuation;  // x is inner cutoff, y is outer cutoff, z is linear term for attenuation equation, w is quadratic term
 };
+
+// Returns a lightData object that represents a light that doesn't exist
+// Need this because setting all fields in LightData to zero results in "direction" being zero, leading to undefined behaviour when the shader attempts to normalize direction
+struct LightData getNullLight();
 
 // Base class for lights
 class Light {

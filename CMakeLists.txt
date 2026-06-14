@@ -12,15 +12,19 @@ find_package(imgui CONFIG REQUIRED)
 
 if(${TEST})
 
-    set(SOURCES testMain.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp renderer.cpp)
+    set(SOURCES testMain.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp renderer.cpp light.cpp)
 
 else()
 
-    SET(SOURCES main.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp, renderer.cpp)
+    SET(SOURCES main.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp, renderer.cpp light.cpp)
 
 endif()
 
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+if (${TEST})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG_MODE)
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/")
 
