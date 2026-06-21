@@ -104,9 +104,10 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
     #ifdef DEBUG_MODE
+    
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+
     #endif
 
     GLFWwindow *window = glfwCreateWindow(800, 600, "Test", NULL, NULL);
@@ -146,7 +147,7 @@ int main() {
     ModelLoader loader;
     std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/backpack/backpack.obj", &shader);
     std::vector<std::unique_ptr<Light>> lights;
-    lights.push_back(std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.2f, 0.7f, 0.3f, glm::vec3(1, -1, -1)));
+    lights.push_back(std::make_unique<DirectionalLight>(glm::vec3(0, 1, 0), 1.0f, 1.0f, 1.0f, glm::vec3(1, -1, 0)));
     Renderer renderer;
     renderer.setCamera(&cam);
     

@@ -10,11 +10,11 @@ Renderer::Renderer() {
     // Generate matricesUBO
     glGenBuffers(1, &matricesUBO);
     glBindBufferBase(GL_UNIFORM_BUFFER, MATRICES_UBO_BINDING_POINT, matricesUBO);
-    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW); // TODO: FIx this
+    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STREAM_DRAW);
     // Generate lightsUBO
     glGenBuffers(1, &lightsUBO);
     glBindBufferBase(GL_UNIFORM_BUFFER, LIGHTS_UBO_BINDING_POINT, lightsUBO);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(LightData), NULL, GL_STATIC_DRAW);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(LightData) * MAX_LIGHT_COUNT, NULL, GL_STREAM_DRAW);
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -56,8 +56,8 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<std::unique_ptr<Light
 
         // Set material uniform
         shader->setVec3("material.color", meshes[i].material->color);
-        shader->setInt("material.diffuseTexture", DIFFUSE_TEXTURE_UNIT);
-        shader->setInt("material.specularTexture", SPECULAR_TEXTURE_UNIT);
+        shader->setInt("material.diffuseTexture", DIFFUSE_TEXTURE_UNIT - GL_TEXTURE0);
+        shader->setInt("material.specularTexture", SPECULAR_TEXTURE_UNIT - GL_TEXTURE0);
         shader->setFloat("material.shininess", meshes[i].material->shininess);
 
         // Bind textures

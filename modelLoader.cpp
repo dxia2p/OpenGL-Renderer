@@ -12,7 +12,7 @@
 
 namespace {
 // Helper function for loading a texture from a file and sending it to the gpu
-unsigned int textureFromFile(std::string path, GLint format) {
+unsigned int textureFromFile(std::string path) {
     stbi_set_flip_vertically_on_load(true);
     int width, height, numChannels;
     unsigned char *data = stbi_load(path.c_str(), &width, &height, &numChannels, 0);
@@ -21,6 +21,23 @@ unsigned int textureFromFile(std::string path, GLint format) {
         std::cerr << "Error loading texture at path: " << path << std::endl;
         return 0;
     }
+    //
+    // Decide what format the image is in 
+    GLenum format;
+    switch (numChannels) {
+        case 1:
+            format = GL_R;
+            break;
+        case 2:
+            format = GL_RG;
+            break;
+        case 3:
+            format = GL_RGB;
+            break;
+        case 4:
+            format = GL_RGBA;
+    }
+
     unsigned int texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -129,7 +146,7 @@ Texture ModelLoader::loadTextures(aiMaterial *mat, aiTextureType aiType, Texture
         if (it != loadedTextures.end()) {
             result = loadedTextures[textureDir];
         } else {
-            result.id = textureFromFile(textureDir, (aiType == aiTextureType_DIFFUSE) ? GL_RGB : GL_R);  // TODO: Change this to handle more texture types
+            result.id = textureFromFile(textureDir);  // TODO: Change this to handle more texture types
             result.textureType = internalType;
             result.path = textureDir;
             loadedTextures[textureDir] = result;

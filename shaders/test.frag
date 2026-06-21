@@ -27,18 +27,46 @@ layout(std140, binding = 1) uniform Lights {
     LightData lights[MAX_LIGHT_COUNT];
 };
 
-out vec4 FragColor;
 
 // Functions
 vec3 calcDirLight(LightData light, vec3 normal, vec3 viewDir) {
-    vec3 ambient = vec3(light.ambientDiffuseSpecularLightType.x);
 
-    vec3 diffuse = max(dot(normalize(Normal), normalize(light.direction)), 0) * vec3(light.ambientDiffuseSpecularLightType.y);
-    vec3 reflectDir = reflect(light.direction, Normal);
-    vec3 specular = max(dot(reflectDir, -viewDir), 0) * vec3(light.ambientDiffuseSpecularLightType.z);
+    vec3 diffuse = max(dot(normalize(Normal), normalize(-light.direction)), 0) * vec3(light.ambientDiffuseSpecularLightType.y) * texture(material.diffuseTexture, TexCoord).rgb;
+    vec3 reflectDir = normalize(reflect(light.direction, Normal));
+    vec3 specular = pow(max(dot(reflectDir, -normalize(viewDir)), 0), material.shininess) * vec3(light.ambientDiffuseSpecularLightType.z) * texture(material.specularTexture, TexCoord).rgb;
 
-    return (ambient + diffuse + specular) * material.color * texture(material.diffuseTexture, TexCoord).rgb;
+    vec3 ambient = vec3(light.ambientDiffuseSpecularLightType.x) * vec3(texture(material.diffuseTexture, TexCoord));
+
+    return (ambient + diffuse + specular) * material.color * light.color;
 }
+
+
+/*
+vec3 calcDirLight(LightData light, vec3 normal, vec3 viewDir)
+{
+    vec3 lightDir = normalize(-light.direction);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(normalize(-viewDir), reflectDir), 0.0), material.shininess);
+    // combine results
+    vec3 ambient  = light.ambientDiffuseSpecularLightType.x * vec3(texture(material.diffuseTexture, TexCoord));
+    vec3 diffuse  = light.ambientDiffuseSpecularLightType.y * diff * vec3(texture(material.diffuseTexture, TexCoord));
+    vec3 specular = light.ambientDiffuseSpecularLightType.z * spec * vec3(texture(material.specularTexture, TexCoord));
+    return (ambient + diffuse + specular) * material.color * light.color;
+}  
+*/
+
+vec3 calcPointLight(LightData light, vec3 normal, vec3 viewDir) {
+    return vec3(0, 0, 0);
+}
+
+vec3 calcSpotLight(LightData light, vec3 normal, vec3 viewDir) {
+    return vec3(0, 0, 0);
+}
+
+out vec4 FragColor;
 
 void main() {
     FragColor = vec4(0, 0, 0, 1);
@@ -47,9 +75,9 @@ void main() {
         if (lights[i].ambientDiffuseSpecularLightType.w == 0) {  // Directional light
             FragColor += vec4(calcDirLight(lights[i], Normal, FragPos - cameraPos), 0);
         } else if (lights[i].ambientDiffuseSpecularLightType.w == 1) {  // Point light
-
+            FragColor += vec4(calcPointLight(lights[i], Normal, FragPos - cameraPos), 0);
         } else {  // Spot light
-
+            FragColor += vec4(calcSpotLight(lights[i], Normal, FragPos - cameraPos), 0);
         }
     }
 }
