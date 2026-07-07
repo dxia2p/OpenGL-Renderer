@@ -29,7 +29,7 @@ layout(std140, binding = 1) uniform Lights {
 
 
 // Functions
-vec3 calcDirLight(LightData light, vec3 normal, vec3 viewDir) {
+vec3 calcDirLight(LightData light, vec3 viewDir) {
 
     vec3 diffuse = max(dot(normalize(Normal), normalize(-light.direction)), 0) * vec3(light.ambientDiffuseSpecularLightType.y) * texture(material.diffuseTexture, TexCoord).rgb;
     vec3 reflectDir = normalize(reflect(light.direction, Normal));
@@ -58,11 +58,24 @@ vec3 calcDirLight(LightData light, vec3 normal, vec3 viewDir)
 }  
 */
 
-vec3 calcPointLight(LightData light, vec3 normal, vec3 viewDir) {
-    return vec3(0, 0, 0);
+vec3 calcPointLight(LightData light, vec3 viewDir) {
+    vec3 lightDir = normalize(FragPos - light.direction);
+    float diffuseMult = max(dot(Normal, lightDir), 0.0);
+
+    vec3 reflectDir = normalize(reflect(lightDir, Normal));
+    float specularMult = pow(max(dot(reflectDir, -normalize(viewDir)), 0.0), material.shininess);
+    
+    vec3 ambient = light.ambientDiffuseSpecularLightType.x * vec3(texture(material.diffuseTexture, TexCoord));
+    vec3 diffuse = diffuseMult * light.ambientDiffuseSpecularLightType.y * vec3(texture(material.diffuseTexture, TexCoord));
+    vec3 specular = specularMult * light.ambientDiffuseSpecularLightType.z * vec3(texture(material.specularTexture, TexCoord));
+
+    float dist = distance(light.position, FragPos);
+    float attenuation = 1.0 / (1 + light.cutoffsAndAttenuation.z * dist + light.cutoffsAndAttenuation.w * dist * dist);
+
+    return (ambient + diffuse + specular) * material.color * light.color * attenuation;
 }
 
-vec3 calcSpotLight(LightData light, vec3 normal, vec3 viewDir) {
+vec3 calcSpotLight(LightData light, vec3 viewDir) {
     return vec3(0, 0, 0);
 }
 
@@ -73,11 +86,11 @@ void main() {
 
     for(int i = 0; i < MAX_LIGHT_COUNT; i++) {
         if (lights[i].ambientDiffuseSpecularLightType.w == 0) {  // Directional light
-            FragColor += vec4(calcDirLight(lights[i], Normal, FragPos - cameraPos), 0);
+            FragColor += vec4(calcDirLight(lights[i], FragPos - cameraPos), 0);
         } else if (lights[i].ambientDiffuseSpecularLightType.w == 1) {  // Point light
-            FragColor += vec4(calcPointLight(lights[i], Normal, FragPos - cameraPos), 0);
+            FragColor += vec4(calcPointLight(lights[i], FragPos - cameraPos), 0);
         } else {  // Spot light
-            FragColor += vec4(calcSpotLight(lights[i], Normal, FragPos - cameraPos), 0);
+            FragColor += vec4(calcSpotLight(lights[i], FragPos - cameraPos), 0);
         }
     }
 }

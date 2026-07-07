@@ -3,6 +3,7 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <signal.h>
 
 #include "camera.hpp"
 #include "modelLoader.hpp"
@@ -147,10 +148,12 @@ int main() {
     std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/backpack/backpack.obj", &shader);
     std::vector<std::unique_ptr<Light>> lights;
     lights.push_back(std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.2f, 0.7f, 0.3f, glm::vec3(1, -1, -1)));
+    lights.push_back(std::make_unique<PointLight>(glm::vec3(0, 1, 0), 0.2f, 0.7f, 0.3f, glm::vec3(4, 0, 0), 0.22, 0.2));
+    lights.push_back(std::make_unique<PointLight>(glm::vec3(0, 0, 1), 0.2f, 0.7f, 0.3f, glm::vec3(-4, 0, 0), 0.09, 0.032));
+
     Renderer renderer;
     renderer.setCamera(&cam);
     
-
     while (!glfwWindowShouldClose(window)) {
         deltaTime = glfwGetTime() - prevTime;
         prevTime = glfwGetTime();
