@@ -59,8 +59,8 @@ vec3 calcDirLight(LightData light, vec3 normal, vec3 viewDir)
 */
 
 vec3 calcPointLight(LightData light, vec3 viewDir) {
-    vec3 lightDir = normalize(FragPos - light.direction);
-    float diffuseMult = max(dot(Normal, lightDir), 0.0);
+    vec3 lightDir = normalize(FragPos - light.position);
+    float diffuseMult = max(dot(Normal, -lightDir), 0.0);
 
     vec3 reflectDir = normalize(reflect(lightDir, Normal));
     float specularMult = pow(max(dot(reflectDir, -normalize(viewDir)), 0.0), material.shininess);
@@ -76,7 +76,29 @@ vec3 calcPointLight(LightData light, vec3 viewDir) {
 }
 
 vec3 calcSpotLight(LightData light, vec3 viewDir) {
-    return vec3(0, 0, 0);
+    vec3 lightDir = normalize(FragPos - light.position);  // Direction from light to fragment
+    float diffuseMult = max(dot(Normal, -lightDir), 0.0);
+
+    vec3 reflectDir = normalize(reflect(lightDir, Normal));
+    float specularMult = pow(max(dot(reflectDir, -normalize(viewDir)), 0.0), material.shininess);
+
+    // We will assume that cutoff values in LightData are in radians
+    float fragAngle = dot(lightDir, normalize(light.direction));   // Angle between lightDir (direction from light to fragment) and the direction of the spot light
+    // light.cutoffsAndAttenuation.x is inner cutoff and y is outer cutoff
+    float intensity = clamp((fragAngle - cos(light.cutoffsAndAttenuation.y)) / (cos(light.cutoffsAndAttenuation.x) - cos(light.cutoffsAndAttenuation.y)), 0.0, 1.0);  // Intensity is used to create soft edges
+
+    diffuseMult *= intensity;
+    specularMult *= intensity;
+    
+    vec3 ambient = light.ambientDiffuseSpecularLightType.x * vec3(texture(material.diffuseTexture, TexCoord));
+    vec3 diffuse = diffuseMult * light.ambientDiffuseSpecularLightType.y * vec3(texture(material.diffuseTexture, TexCoord));
+    vec3 specular = specularMult * light.ambientDiffuseSpecularLightType.z * vec3(texture(material.specularTexture, TexCoord));
+
+    float dist = distance(light.position, FragPos);
+    float attenuation = 1.0 / (1 + light.cutoffsAndAttenuation.z * dist + light.cutoffsAndAttenuation.w * dist * dist);
+
+
+    return (ambient + diffuse + specular) * material.color * light.color * attenuation;
 }
 
 out vec4 FragColor;

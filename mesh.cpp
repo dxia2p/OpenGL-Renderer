@@ -16,7 +16,7 @@ Mesh::Mesh(glm::vec3 position, std::shared_ptr<Material> material, const std::ve
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
     
-    // Assume the shader takes in vertices, indices, then UVs
+    // Assume the shader takes in vertices, normals, then UVs
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));

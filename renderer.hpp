@@ -13,7 +13,7 @@ public:
     static constexpr unsigned int LIGHTS_UBO_BINDING_POINT = 1;
 
     Renderer();
-    void draw(std::vector<Mesh> &meshes, std::vector<std::unique_ptr<Light>> &lights);
+    void draw(std::vector<Mesh> &meshes, std::vector<Light *> &lights);
 
     void setCamera(Camera *camera) { this->camera = camera; }
 

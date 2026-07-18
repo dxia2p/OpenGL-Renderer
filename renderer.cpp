@@ -20,7 +20,7 @@ Renderer::Renderer() {
 }
 
 
-void Renderer::draw(std::vector<Mesh> &meshes, std::vector<std::unique_ptr<Light>> &lights) {
+void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
     // Check if camera is null
     if (camera == nullptr) std::cerr << "Camera is null in renderer!" << std::endl;
 

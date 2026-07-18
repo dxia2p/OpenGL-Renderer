@@ -17,7 +17,7 @@ struct LightData {  // Needs to be aligned to 16 byte boundaries because we use 
     alignas(16) glm::vec3 direction;
     alignas(16) glm::vec3 color;
     alignas(16) glm::vec4 ambientDiffuseSpecularLightType;  // Multipliers for ambient, diffuse and specular, w = light type (follows enum class LightTypes)
-    alignas(16) glm::vec4 cutoffsAndAttenuation;  // x is inner cutoff, y is outer cutoff, z is linear term for attenuation equation, w is quadratic term
+    alignas(16) glm::vec4 cutoffsAndAttenuation;  // x is inner cutoff (radians), y is outer cutoff (radians), z is linear term for attenuation equation, w is quadratic term
 };
 
 // Returns a lightData object that represents a light that doesn't exist
@@ -63,8 +63,9 @@ public:
         return result;
     }
 
-private:
     glm::vec3 direction;
+
+private:
 };
 
 class PointLight : public Light {
@@ -81,14 +82,15 @@ public:
         return result;
     }
 
-private:
     glm::vec3 position;
     float linear, quadratic;
+
+private:
 };
 
 class SpotLight : public Light {
 public:
-    SpotLight(glm::vec3 color, float ambient, float diffuse, float specular, glm::vec3 position, glm::vec3 direction, float linear, float quadratic) : Light(color, ambient, diffuse, specular), position(position), direction(direction), linear(linear), quadratic(quadratic) {}
+    SpotLight(glm::vec3 color, float ambient, float diffuse, float specular, glm::vec3 position, glm::vec3 direction, float linear, float quadratic, float innerCutoff, float outerCutoff) : Light(color, ambient, diffuse, specular), position(position), direction(direction), linear(linear), quadratic(quadratic), innerCutoff(innerCutoff), outerCutoff(outerCutoff) {}
 
     LightData generateLightData() const override {
         struct LightData result;
@@ -100,10 +102,11 @@ public:
         return result;
     }
 
-private:
     glm::vec3 position;
     glm::vec3 direction;
     float linear, quadratic, innerCutoff, outerCutoff;
-};
+
+private:
+    };
 
 #endif
