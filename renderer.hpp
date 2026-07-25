@@ -4,6 +4,7 @@
 #include "camera.hpp"
 #include "light.hpp"
 #include "mesh.hpp"
+#include "skybox.hpp"
 
 
 class Renderer {
@@ -17,9 +18,11 @@ public:
 
     void setCamera(Camera *camera) { this->camera = camera; }
 
+    void setSkybox(Skybox *skybox) { this->skybox = skybox; }
 private:
     unsigned int matricesUBO, lightsUBO;
     Camera *camera = nullptr;
+    Skybox *skybox = nullptr;
 };
 
 #endif

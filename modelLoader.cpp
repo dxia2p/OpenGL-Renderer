@@ -49,11 +49,6 @@ unsigned int textureFromFile(std::string path) {
 }
 
 
-Mesh loadSkybox(const std::vector<std::string> facePaths, Shader *skyboxShader) {
-    
-}
-
-
 std::vector<Mesh> ModelLoader::load(const std::string &path, Shader *defaultShader) {
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);

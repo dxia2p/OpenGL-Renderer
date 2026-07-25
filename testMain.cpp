@@ -5,6 +5,7 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <string>
 
 #include "camera.hpp"
 #include "light.hpp"
@@ -12,6 +13,7 @@
 #include "mesh.hpp"
 #include "shader.hpp"
 #include "renderer.hpp"
+#include "skybox.hpp"
 
 float deltaTime = 0;
 float prevTime = 0;
@@ -148,6 +150,21 @@ int main() {
 
     glEnable(GL_DEPTH_TEST);
 
+
+    Renderer renderer;
+    // ------------------------------------------------------------ Set up skybox ------------------------------------------------------------
+    std::vector<std::string> skyboxFaces = {
+        std::string(ASSETS_DIR) + "skyboxes/skybox/right.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/left.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/top.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/bottom.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/front.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/back.jpg"
+    };
+    Shader skyboxShader(std::string(ASSETS_DIR) + "shaders/skybox.vert", std::string(ASSETS_DIR) + "shaders/skybox.frag");
+    Skybox skybox(skyboxFaces, &skyboxShader);
+    renderer.setSkybox(&skybox);
+
     // ------------------------------------------------------------ Set up mesh, camera and shaders ------------------------------------------------------------
     Shader shader(std::string(ASSETS_DIR) + "shaders/test.vert", std::string(ASSETS_DIR) + "shaders/test.frag");
     ModelLoader loader;
@@ -158,7 +175,6 @@ int main() {
     std::unique_ptr<SpotLight> flashlight = std::make_unique<SpotLight>(glm::vec3(1, 1, 1), 0.1f, 0.8f, 0.3f, cam.position, cam.getFront(), 0.014, 0.0007, glm::radians(12.0f), glm::radians(15.0f));
     std::vector<Light *> lights = {dirLight.get(), pointLight1.get(), pointLight2.get(), flashlight.get()};
 
-    Renderer renderer;
     renderer.setCamera(&cam);
     
     while (!glfwWindowShouldClose(window)) {

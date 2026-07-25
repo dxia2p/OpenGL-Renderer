@@ -15,7 +15,6 @@ public:
     ModelLoader() {}
     
     std::vector<Mesh> load(const std::string &path, Shader *defaultShader);
-    Mesh loadSkybox(const std::vector<std::string> facePaths, Shader *skyboxShader);
 private:
     std::unordered_map<std::string, Texture> loadedTextures;
     std::string currentDirectory;  // currentDirectory includes a slash at the end
