@@ -149,6 +149,7 @@ int main() {
     glfwSetCursorPosCallback(window, mouseCallback);
 
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 
 
     Renderer renderer;

@@ -8,5 +8,6 @@ uniform mat4 view;
 
 void main() {
     TexCoords = aPos;  // We can use positions of vertices as texture coordinates
-    gl_Position = projection * view * vec4(aPos, 1.0);
+    vec4 pos = projection * view * vec4(aPos, 1.0);
+    gl_Position = pos.xyww;  // This ensures the depth value of skyboxes is always 1.0
 }
