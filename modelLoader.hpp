@@ -15,6 +15,7 @@ public:
     ModelLoader() {}
     
     std::vector<Mesh> load(const std::string &path, Shader *defaultShader);
+    Mesh loadCube(Shader *defaultShader);
 private:
     std::unordered_map<std::string, Texture> loadedTextures;
     std::string currentDirectory;  // currentDirectory includes a slash at the end

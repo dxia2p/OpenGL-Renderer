@@ -115,4 +115,10 @@ void main() {
             FragColor += vec4(calcSpotLight(lights[i], FragPos - cameraPos), 0);
         }
     }
+    float near = 0.2;
+    float far = 100;
+    float ndc = gl_FragCoord.z * 2.0 - 1.0;
+    float linearDepth = (2.0 * near * far) / (far + near - ndc * (far - near));
+    linearDepth /= far;
+    FragColor = vec4(vec3(linearDepth), 1);
 }

@@ -25,17 +25,6 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
     if (camera == nullptr) std::cerr << "Camera is nullptr in renderer!" << std::endl;
     if (skybox == nullptr) std::cerr << "Skybox is nullptr in renderer!" << std::endl;
 
-    // Render the skybox first
-    glDepthMask(GL_FALSE);  // Disable depth writing to ensure skybox is always drawn behind other objects
-    skybox->shader->use();
-    // TODO: Set view and projection matrix
-    skybox->shader->setMat4("projection", camera->getProjectionMat());
-    skybox->shader->setMat4("view", glm::mat4(glm::mat3(camera->getLookatMat())));  // Remove the translation section of the view matrix for skyboxes
-    glBindVertexArray(skybox->getVAO());
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->getCubemap());
-    glDrawArrays(GL_TRIANGLES, 0, SKYBOX_VERT_COUNT);
-    glDepthMask(GL_TRUE);
-
     // Set UBO for view and projection matrices
     glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(camera->getProjectionMat()));  // First matrix in UBO is projection
@@ -81,4 +70,14 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
         // Draw the mesh
         glDrawElements(GL_TRIANGLES, meshes[i].getIndexCount(), GL_UNSIGNED_INT, 0);
     }
+
+    // Render the skybox last
+    glDepthMask(GL_FALSE);  // Disable depth writing to ensure skybox is always drawn behind other objects
+    skybox->shader->use();
+    skybox->shader->setMat4("projection", camera->getProjectionMat());
+    skybox->shader->setMat4("view", glm::mat4(glm::mat3(camera->getLookatMat())));  // Remove the translation section of the view matrix for skyboxes
+    glBindVertexArray(skybox->getVAO());
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->getCubemap());
+    glDrawArrays(GL_TRIANGLES, 0, SKYBOX_VERT_COUNT);
+    glDepthMask(GL_TRUE);
 }

@@ -46,6 +46,68 @@ unsigned int textureFromFile(std::string path) {
     stbi_image_free(data);
     return texture;
 }
+
+const std::vector<Vertex> cubeVertices{
+    // Right face
+    Vertex(glm::vec3(0.5, 0.5, 0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, 0.5, -0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, -0.5, 0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, -0.5, -0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
+
+    // Left face
+    Vertex(glm::vec3(-0.5, 0.5, 0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(-0.5, 0.5, -0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(-0.5, -0.5, 0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
+
+    // Bottom face
+    Vertex(glm::vec3(-0.5, -0.5, 0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, -0.5, 0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),  
+    Vertex(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, -0.5, -0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),
+
+    // Top face
+    Vertex(glm::vec3(-0.5, 0.5, 0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(-0.5, 0.5, -0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, 0.5, -0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),    
+
+    // Front face
+    Vertex(glm::vec3(-0.5, 0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, 0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, -0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
+    
+    // Back face
+    Vertex(glm::vec3(-0.5, 0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(-0.5, -0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
+    Vertex(glm::vec3(0.5, -0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
+};
+
+const std::vector<unsigned int> cubeIndices{
+    // Right face triangles
+    3, 2, 4,
+    3, 1, 2,
+
+    // Left face triangles
+    3, 4, 2,
+    2, 1, 3
+
+    // Top face triangles
+    
+
+    // Bottom face triangles
+
+    // Front face triangles
+
+    // Back face triangles
+};
+}
+
+
+Mesh ModelLoader::loadCube(Shader *defaultShader) {
+    return Mesh(glm::vec3(0), std::make_shared<Material>(), cubeVertices, cubeIndices);
 }
 
 

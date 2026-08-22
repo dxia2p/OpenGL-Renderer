@@ -148,8 +148,10 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetCursorPosCallback(window, mouseCallback);
 
+    // OpenGL options
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    glEnable(GL_CULL_FACE);
 
 
     Renderer renderer;
