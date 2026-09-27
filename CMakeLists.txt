@@ -16,7 +16,7 @@ if(${TEST})
 
 else()
 
-    SET(SOURCES main.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp, renderer.cpp light.cpp skybox.cpp)
+    SET(SOURCES main.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp renderer.cpp light.cpp skybox.cpp)
 
 endif()
 

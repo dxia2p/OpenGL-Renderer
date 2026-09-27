@@ -87,17 +87,17 @@ const std::vector<Vertex> cubeVertices{
 
 const std::vector<unsigned int> cubeIndices{
     // Right face triangles
-    3, 2, 4,
-    3, 1, 2,
+    2, 1, 3,
+    2, 0, 1,
 
     // Left face triangles
-    3, 4, 2,
-    2, 1, 3
-
-    // Top face triangles
-    
+    6, 7, 5,
+    5, 4, 7
 
     // Bottom face triangles
+    
+
+    // Top face triangles
 
     // Front face triangles
 
