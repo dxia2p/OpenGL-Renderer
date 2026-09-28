@@ -28,7 +28,11 @@ Renderer::Renderer() {
     glBindTexture(GL_TEXTURE_2D, fallbackSpecularTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
+    // OpenGL options
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_FRAMEBUFFER_SRGB);  // Gamma correction
 }
 
 

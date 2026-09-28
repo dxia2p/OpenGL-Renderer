@@ -9,7 +9,7 @@ constexpr int SKYBOX_VERT_COUNT = 36;
 
 class Skybox {
 public:
-    Skybox(std::vector<std::string> facePaths, Shader *shader);
+    Skybox(std::vector<std::string> facePaths, Shader *shader, bool hdr);
 
     Shader *shader;
     

@@ -50,7 +50,7 @@ float skyboxVertices[] = {
 };
 }
 
-Skybox::Skybox(std::vector<std::string> facePaths, Shader *shader) : shader(shader) {
+Skybox::Skybox(std::vector<std::string> facePaths, Shader *shader, bool hdr) : shader(shader) {
     if (facePaths.size() != 6) {
         std::cerr << "A skybox cannot have " << facePaths.size() << " faces!" << std::endl;
         return;
@@ -68,7 +68,7 @@ Skybox::Skybox(std::vector<std::string> facePaths, Shader *shader) : shader(shad
             return;
         }
 
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, hdr ? GL_RGB : GL_SRGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         stbi_image_free(data);
     }
 

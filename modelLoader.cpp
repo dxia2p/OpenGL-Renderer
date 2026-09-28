@@ -12,7 +12,7 @@
 
 namespace {
 // Helper function for loading a texture from a file and sending it to the gpu
-unsigned int textureFromFile(std::string path) {
+unsigned int textureFromFile(std::string path, bool srgb) {
     stbi_set_flip_vertically_on_load(true);
     int width, height, numChannels;
     unsigned char *data = stbi_load(path.c_str(), &width, &height, &numChannels, 0);
@@ -24,24 +24,31 @@ unsigned int textureFromFile(std::string path) {
     //
     // Decide what format the image is in 
     GLenum format;
+    GLenum internalFormat;
     switch (numChannels) {
         case 1:
             format = GL_R;
+            internalFormat = GL_R;
             break;
         case 2:
             format = GL_RG;
+            internalFormat = GL_RG;
             break;
         case 3:
             format = GL_RGB;
+            internalFormat = srgb ? GL_SRGB : GL_RGB;
             break;
         case 4:
             format = GL_RGBA;
+            internalFormat = srgb ? GL_SRGB_ALPHA : GL_RGBA;
+        default:
+            std::cerr << "Invalid number of channels (" << numChannels << ") in textureFromFile()" << std::endl;
     }
 
     unsigned int texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data);
     return texture;
@@ -215,7 +222,7 @@ Texture ModelLoader::loadTextures(aiMaterial *mat, aiTextureType aiType, Texture
         if (it != loadedTextures.end()) {
             result = loadedTextures[textureDir];
         } else {
-            result.id = textureFromFile(textureDir);  // TODO: Change this to handle more texture types
+            result.id = textureFromFile(textureDir, internalType == TextureType::Diffuse ? true : false);  // TODO: Change this to handle more texture types
             result.textureType = internalType;
             result.path = textureDir;
             loadedTextures[textureDir] = result;

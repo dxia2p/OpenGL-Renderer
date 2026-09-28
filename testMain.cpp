@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <glm/fwd.hpp>
 #include <glm/trigonometric.hpp>
 #include <iostream>
 
@@ -148,11 +149,6 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetCursorPosCallback(window, mouseCallback);
 
-    // OpenGL options
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_CULL_FACE);
-
 
     Renderer renderer;
     // ------------------------------------------------------------ Set up skybox ------------------------------------------------------------
@@ -165,21 +161,24 @@ int main() {
         std::string(ASSETS_DIR) + "skyboxes/skybox/back.jpg"
     };
     Shader skyboxShader(std::string(ASSETS_DIR) + "shaders/skybox.vert", std::string(ASSETS_DIR) + "shaders/skybox.frag");
-    Skybox skybox(skyboxFaces, &skyboxShader);
+    Skybox skybox(skyboxFaces, &skyboxShader, false);
     renderer.setSkybox(&skybox);
 
     // ------------------------------------------------------------ Set up mesh, camera and shaders ------------------------------------------------------------
     Shader shader(std::string(ASSETS_DIR) + "shaders/test.vert", std::string(ASSETS_DIR) + "shaders/test.frag");
     ModelLoader loader;
     std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/backpack/backpack.obj", &shader);
-    std::unique_ptr<DirectionalLight> dirLight = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.2f, 0.7f, 0.3f, glm::vec3(1, -1, -1));
+    std::unique_ptr<DirectionalLight> dirLight = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.2f, 0.7f, 0.3f, glm::vec3(0, -0.5, 1));
     std::unique_ptr<PointLight> pointLight1 =  std::make_unique<PointLight>(glm::vec3(0, 1, 0), 0.2f, 0.7f, 0.3f, glm::vec3(4, 0, 1), 0.045, 0.0075);
     std::unique_ptr<PointLight> pointLight2 = std::make_unique<PointLight>(glm::vec3(1, 0, 0), 0.2f, 0.7f, 0.3f, glm::vec3(-4, 0, 1), 0.045, 0.0075);
-    std::unique_ptr<SpotLight> flashlight = std::make_unique<SpotLight>(glm::vec3(1, 1, 1), 0.1f, 0.8f, 0.3f, cam.position, cam.getFront(), 0.014, 0.0007, glm::radians(12.0f), glm::radians(15.0f));
-    std::vector<Light *> lights = {dirLight.get(), pointLight1.get(), pointLight2.get(), flashlight.get()};
+    //std::unique_ptr<SpotLight> flashlight = std::make_unique<SpotLight>(glm::vec3(1, 1, 1), 0.1f, 0.8f, 0.3f, cam.position, cam.getFront(), 0.014, 0.0007, glm::radians(12.0f), glm::radians(15.0f));
+    std::vector<Light *> lights = {dirLight.get(), pointLight1.get(), pointLight2.get()/*, flashlight.get()*/};
 
     // Default cube
     std::vector<Mesh> cube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader);
+    cube[0].scale = glm::vec3(100.0f, 1.0, 100.0f);
+    cube[0].position = glm::vec3(0.0f, -4.0f, 0.0f);
+    cube[0].material->shininess = 64.0f;
     meshes.insert(meshes.end(), cube.begin(), cube.end());
 
     renderer.setCamera(&cam);
@@ -191,8 +190,8 @@ int main() {
         processInput(window);
 
         /* LOGIC */
-        flashlight->direction = cam.getFront();
-        flashlight->position = cam.position;
+        //flashlight->direction = cam.getFront();
+        //flashlight->position = cam.position;
 
         /* END OF LOGIC */
 
