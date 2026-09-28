@@ -33,6 +33,22 @@ Renderer::Renderer() {
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glEnable(GL_FRAMEBUFFER_SRGB);  // Gamma correction
+    
+    // Initialize shadow maps
+    glGenTextures(1, &shadowMaps);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMaps);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT24, SHADOW_WIDTH, SHADOW_HEIGHT, MAX_LIGHT_COUNT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+    glGenFramebuffers(1, &shadowMapsFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapsFBO);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
@@ -40,6 +56,22 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
     // Check if camera is null
     if (camera == nullptr) std::cerr << "Camera is nullptr in renderer!" << std::endl;
     if (skybox == nullptr) std::cerr << "Skybox is nullptr in renderer!" << std::endl;
+
+    // Render shadowmaps
+    int shadowMapLayer = 0;
+    for(int i = 0; i < lights.size(); i++) {
+        if (lights[i]->lightType != LightTypes::DIRECTIONAL) {
+            continue;
+        }
+
+        // Render scene from light's perspective
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowMapsFBO);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMaps, 0, shadowMapLayer);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        // Render scene
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
     // Set UBO for view and projection matrices
     glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);

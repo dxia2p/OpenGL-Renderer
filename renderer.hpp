@@ -12,6 +12,7 @@ public:
     static constexpr unsigned int MAX_LIGHT_COUNT = 16;
     static constexpr unsigned int MATRICES_UBO_BINDING_POINT = 0;
     static constexpr unsigned int LIGHTS_UBO_BINDING_POINT = 1;
+    static constexpr unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
     Renderer();
     void draw(std::vector<Mesh> &meshes, std::vector<Light *> &lights);
@@ -24,6 +25,8 @@ private:
     unsigned int matricesUBO, lightsUBO;
     Camera *camera = nullptr;
     Skybox *skybox = nullptr;
+    unsigned int shadowMapsFBO;
+    unsigned int shadowMaps;
 };
 
 #endif

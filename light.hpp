@@ -41,8 +41,10 @@ public:
 
     virtual LightData generateLightData() const = 0;
 
+    LightTypes lightType;
+
 protected:
-    Light(glm::vec3 color, float ambient, float diffuse, float specular) : color(color), ambient(ambient), diffuse(diffuse), specular(specular) {}
+    Light(glm::vec3 color, float ambient, float diffuse, float specular, LightTypes lightType) : color(color), ambient(ambient), diffuse(diffuse), specular(specular), lightType(lightType) {}
     glm::vec3 color;
     float ambient, diffuse, specular;
 private:
@@ -51,14 +53,14 @@ private:
 
 class DirectionalLight : public Light {
 public:
-    DirectionalLight(glm::vec3 color, float ambient, float diffuse, float specular, glm::vec3 direction) : Light(color, ambient, diffuse, specular), direction(direction) {}
+    DirectionalLight(glm::vec3 color, float ambient, float diffuse, float specular, glm::vec3 direction) : Light(color, ambient, diffuse, specular, LightTypes::DIRECTIONAL), direction(direction) {}
 
     LightData generateLightData() const override {
         struct LightData result;
         result.position = glm::vec3(0);
         result.direction = direction;
         result.color = color;
-        result.ambientDiffuseSpecularLightType = glm::vec4(ambient, diffuse, specular, LightTypes::DIRECTIONAL);
+        result.ambientDiffuseSpecularLightType = glm::vec4(ambient, diffuse, specular, lightType);
         result.cutoffsAndAttenuation = glm::vec4(0);
         return result;
     }
@@ -70,14 +72,14 @@ private:
 
 class PointLight : public Light {
 public:
-    PointLight(glm::vec3 color, float ambient, float diffuse, float specular, glm::vec3 position, float linear, float quadratic) : Light(color, ambient, diffuse, specular), position(position), linear(linear), quadratic(quadratic) {}
+    PointLight(glm::vec3 color, float ambient, float diffuse, float specular, glm::vec3 position, float linear, float quadratic) : Light(color, ambient, diffuse, specular, LightTypes::POINT), position(position), linear(linear), quadratic(quadratic) {}
 
     LightData generateLightData() const override {
         struct LightData result;
         result.position = position;
         result.direction = glm::vec3(0);
         result.color = color;
-        result.ambientDiffuseSpecularLightType = glm::vec4(ambient, diffuse, specular, LightTypes::POINT);
+        result.ambientDiffuseSpecularLightType = glm::vec4(ambient, diffuse, specular, lightType);
         result.cutoffsAndAttenuation = glm::vec4(0, 0, linear, quadratic);
         return result;
     }
@@ -90,14 +92,14 @@ private:
 
 class SpotLight : public Light {
 public:
-    SpotLight(glm::vec3 color, float ambient, float diffuse, float specular, glm::vec3 position, glm::vec3 direction, float linear, float quadratic, float innerCutoff, float outerCutoff) : Light(color, ambient, diffuse, specular), position(position), direction(direction), linear(linear), quadratic(quadratic), innerCutoff(innerCutoff), outerCutoff(outerCutoff) {}
+    SpotLight(glm::vec3 color, float ambient, float diffuse, float specular, glm::vec3 position, glm::vec3 direction, float linear, float quadratic, float innerCutoff, float outerCutoff) : Light(color, ambient, diffuse, specular, LightTypes::SPOT), position(position), direction(direction), linear(linear), quadratic(quadratic), innerCutoff(innerCutoff), outerCutoff(outerCutoff) {}
 
     LightData generateLightData() const override {
         struct LightData result;
         result.position = position;
         result.direction = direction;
         result.color = color;
-        result.ambientDiffuseSpecularLightType = glm::vec4(ambient, diffuse, specular, LightTypes::SPOT);
+        result.ambientDiffuseSpecularLightType = glm::vec4(ambient, diffuse, specular, lightType);
         result.cutoffsAndAttenuation = glm::vec4(innerCutoff, outerCutoff, linear, quadratic);
         return result;
     }
