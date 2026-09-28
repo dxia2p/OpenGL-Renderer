@@ -35,9 +35,15 @@ public:
     Shader *shader;
     glm::vec3 color;
 
+    unsigned int hasDiffuseTexture() {
+        return diffuseMap.textureType != TextureType::None;
+    }
     unsigned int getDiffuseTextureID() { 
         if (diffuseMap.textureType == TextureType::None) std::cerr << "Attempt to fetch ID of diffuse texture with type 'None'" << std::endl;
         return diffuseMap.id; 
+    }
+    unsigned int hasSpecularTexture() {
+        return specularMap.textureType != TextureType::None;
     }
     unsigned int getSpecularTextureID() { 
         if (diffuseMap.textureType == TextureType::None) std::cerr << "Attempt to fetch ID of specular texture with type 'None'" << std::endl;

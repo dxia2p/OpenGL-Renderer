@@ -178,6 +178,10 @@ int main() {
     std::unique_ptr<SpotLight> flashlight = std::make_unique<SpotLight>(glm::vec3(1, 1, 1), 0.1f, 0.8f, 0.3f, cam.position, cam.getFront(), 0.014, 0.0007, glm::radians(12.0f), glm::radians(15.0f));
     std::vector<Light *> lights = {dirLight.get(), pointLight1.get(), pointLight2.get(), flashlight.get()};
 
+    // Default cube
+    std::vector<Mesh> cube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader);
+    meshes.insert(meshes.end(), cube.begin(), cube.end());
+
     renderer.setCamera(&cam);
     
     while (!glfwWindowShouldClose(window)) {

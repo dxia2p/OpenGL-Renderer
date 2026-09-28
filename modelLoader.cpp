@@ -47,68 +47,75 @@ unsigned int textureFromFile(std::string path) {
     return texture;
 }
 
-const std::vector<Vertex> cubeVertices{
-    // Right face
-    Vertex(glm::vec3(0.5, 0.5, 0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, 0.5, -0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, -0.5, 0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, -0.5, -0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
+// const std::vector<Vertex> cubeVertices{
+//     // Right face
+//     Vertex(glm::vec3(0.5, 0.5, 0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, 0.5, -0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, -0.5, 0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, -0.5, -0.5), glm::vec3(1.0, 0, 0), glm::vec2(0, 0)),
 
-    // Left face
-    Vertex(glm::vec3(-0.5, 0.5, 0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(-0.5, 0.5, -0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(-0.5, -0.5, 0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
+//     // Left face
+//     Vertex(glm::vec3(-0.5, 0.5, 0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(-0.5, 0.5, -0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(-0.5, -0.5, 0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(-1.0, 0.0, 0.0), glm::vec2(0, 0)),
 
-    // Bottom face
-    Vertex(glm::vec3(-0.5, -0.5, 0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, -0.5, 0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),  
-    Vertex(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, -0.5, -0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),
+//     // Bottom face
+//     Vertex(glm::vec3(-0.5, -0.5, 0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, -0.5, 0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),  
+//     Vertex(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, -0.5, -0.5), glm::vec3(0.0, -1.0, 0.0), glm::vec2(0, 0)),
 
-    // Top face
-    Vertex(glm::vec3(-0.5, 0.5, 0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(-0.5, 0.5, -0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, 0.5, -0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),    
+//     // Top face
+//     Vertex(glm::vec3(-0.5, 0.5, 0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(-0.5, 0.5, -0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, 0.5, -0.5), glm::vec3(0.0, 1.0, 0.0), glm::vec2(0, 0)),    
 
-    // Front face
-    Vertex(glm::vec3(-0.5, 0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, 0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, -0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
+//     // Front face
+//     Vertex(glm::vec3(-0.5, 0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, 0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, -0.5, -0.5), glm::vec3(0.0, 0.0, -1.0), glm::vec2(0, 0)),
     
-    // Back face
-    Vertex(glm::vec3(-0.5, 0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(-0.5, -0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
-    Vertex(glm::vec3(0.5, -0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
-};
+//     // Back face
+//     Vertex(glm::vec3(-0.5, 0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(-0.5, -0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
+//     Vertex(glm::vec3(0.5, -0.5, 0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0, 0)),
+// };
 
-const std::vector<unsigned int> cubeIndices{
-    // Right face triangles
-    2, 1, 3,
-    2, 0, 1,
+// const std::vector<unsigned int> cubeIndices{
+//     // Right face
+//     2, 3, 1,
+//     2, 1, 0,
 
-    // Left face triangles
-    6, 7, 5,
-    5, 4, 7
+//     // Left face
+//     6, 5, 7,
+//     6, 4, 5,
 
-    // Bottom face triangles
+//     // Bottom face
+//     8, 11, 9,
+//     8, 10, 11,
+
+//     // Top face
+//     12, 13, 15,
+//     12, 15, 14,
+
+//     // Front face
+//     16, 17, 19,
+//     16, 19, 18,
     
-
-    // Top face triangles
-
-    // Front face triangles
-
-    // Back face triangles
-};
-}
+//     // Back face
+//     20, 22, 23,
+//     20, 23, 21
+// };
+}  // namespace
 
 
-Mesh ModelLoader::loadCube(Shader *defaultShader) {
-    return Mesh(glm::vec3(0), std::make_shared<Material>(), cubeVertices, cubeIndices);
-}
+// Mesh ModelLoader::loadCube(Shader *defaultShader) {
+//     return Mesh(glm::vec3(0), std::make_shared<Material>(), cubeVertices, cubeIndices);
+// }
 
 
 std::vector<Mesh> ModelLoader::load(const std::string &path, Shader *defaultShader) {

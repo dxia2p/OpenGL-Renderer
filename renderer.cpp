@@ -11,10 +11,22 @@ Renderer::Renderer() {
     glGenBuffers(1, &matricesUBO);
     glBindBufferBase(GL_UNIFORM_BUFFER, MATRICES_UBO_BINDING_POINT, matricesUBO);
     glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STREAM_DRAW);
+
     // Generate lightsUBO
     glGenBuffers(1, &lightsUBO);
     glBindBufferBase(GL_UNIFORM_BUFFER, LIGHTS_UBO_BINDING_POINT, lightsUBO);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(LightData) * MAX_LIGHT_COUNT, NULL, GL_STREAM_DRAW);
+
+    // Create fallback textures
+    uint8_t rgba[4] = { 255, 255, 255, 255 };
+    glGenTextures(1, &fallbackDiffuseTex);
+    glGenTextures(1, &fallbackSpecularTex);
+
+    glBindTexture(GL_TEXTURE_2D, fallbackDiffuseTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+
+    glBindTexture(GL_TEXTURE_2D, fallbackSpecularTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -63,9 +75,9 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
 
         // Bind textures
         glActiveTexture(DIFFUSE_TEXTURE_UNIT);
-        glBindTexture(GL_TEXTURE_2D, meshes[i].material->getDiffuseTextureID());
+        glBindTexture(GL_TEXTURE_2D, meshes[i].material->hasDiffuseTexture() ? meshes[i].material->getDiffuseTextureID() : fallbackDiffuseTex);
         glActiveTexture(SPECULAR_TEXTURE_UNIT);
-        glBindTexture(GL_TEXTURE_2D, meshes[i].material->getSpecularTextureID());
+        glBindTexture(GL_TEXTURE_2D, meshes[i].material->hasSpecularTexture() ? meshes[i].material->getSpecularTextureID() : fallbackSpecularTex);
 
         // Draw the mesh
         glDrawElements(GL_TRIANGLES, meshes[i].getIndexCount(), GL_UNSIGNED_INT, 0);

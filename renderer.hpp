@@ -20,6 +20,7 @@ public:
 
     void setSkybox(Skybox *skybox) { this->skybox = skybox; }
 private:
+    unsigned int fallbackDiffuseTex, fallbackSpecularTex;
     unsigned int matricesUBO, lightsUBO;
     Camera *camera = nullptr;
     Skybox *skybox = nullptr;
