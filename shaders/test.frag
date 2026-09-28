@@ -29,42 +29,38 @@ layout(std140, binding = 1) uniform Lights {
 
 
 // Functions
-vec3 calcDirLight(LightData light, vec3 viewDir) {
+/* A modified version of the step() function that returns 0.0 if x <= edge, and 1.0 if x > edge */
+float modifiedStep(float edge, float x) {
+    return 1.0 - step(x, edge);
+}
 
-    vec3 diffuse = max(dot(normalize(Normal), normalize(-light.direction)), 0) * vec3(light.ambientDiffuseSpecularLightType.y) * texture(material.diffuseTexture, TexCoord).rgb;
-    vec3 reflectDir = normalize(reflect(light.direction, Normal));
-    vec3 specular = pow(max(dot(reflectDir, -normalize(viewDir)), 0), material.shininess) * vec3(light.ambientDiffuseSpecularLightType.z) * texture(material.specularTexture, TexCoord).rgb;
+/* Function that returns the color of a fragment after a directional light shines on it */
+vec3 calcDirLight(LightData light, vec3 viewDir) {
+    float diffuseMult = max(dot(normalize(Normal), normalize(-light.direction)), 0);
+    vec3 diffuse = diffuseMult * vec3(light.ambientDiffuseSpecularLightType.y) * texture(material.diffuseTexture, TexCoord).rgb;
+
+    /* Blinn phong */
+    vec3 halfwayDir = normalize(-light.direction - viewDir);
+    float specularMult = pow(max(dot(halfwayDir, Normal), 0), material.shininess);
+    specularMult *= modifiedStep(0.0, diffuseMult);
+
+    vec3 specular = specularMult * vec3(light.ambientDiffuseSpecularLightType.z) * texture(material.specularTexture, TexCoord).rgb;
 
     vec3 ambient = vec3(light.ambientDiffuseSpecularLightType.x) * vec3(texture(material.diffuseTexture, TexCoord));
 
     return (ambient + diffuse + specular) * material.color * light.color;
 }
 
-
-/*
-vec3 calcDirLight(LightData light, vec3 normal, vec3 viewDir)
-{
-    vec3 lightDir = normalize(-light.direction);
-    // diffuse shading
-    float diff = max(dot(normal, lightDir), 0.0);
-    // specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(normalize(-viewDir), reflectDir), 0.0), material.shininess);
-    // combine results
-    vec3 ambient  = light.ambientDiffuseSpecularLightType.x * vec3(texture(material.diffuseTexture, TexCoord));
-    vec3 diffuse  = light.ambientDiffuseSpecularLightType.y * diff * vec3(texture(material.diffuseTexture, TexCoord));
-    vec3 specular = light.ambientDiffuseSpecularLightType.z * spec * vec3(texture(material.specularTexture, TexCoord));
-    return (ambient + diffuse + specular) * material.color * light.color;
-}  
-*/
-
+/* Function that returns the color of a fragment after a point light shines on it */
 vec3 calcPointLight(LightData light, vec3 viewDir) {
     vec3 lightDir = normalize(FragPos - light.position);
     float diffuseMult = max(dot(Normal, -lightDir), 0.0);
 
-    vec3 reflectDir = normalize(reflect(lightDir, Normal));
-    float specularMult = pow(max(dot(reflectDir, -normalize(viewDir)), 0.0), material.shininess);
-    
+    /* Blinn phong */
+    vec3 halfwayDir = normalize(-lightDir - viewDir);
+    float specularMult = pow(max(dot(halfwayDir, Normal), 0.0), material.shininess);
+    specularMult *= modifiedStep(0.0, diffuseMult);
+
     vec3 ambient = light.ambientDiffuseSpecularLightType.x * vec3(texture(material.diffuseTexture, TexCoord));
     vec3 diffuse = diffuseMult * light.ambientDiffuseSpecularLightType.y * vec3(texture(material.diffuseTexture, TexCoord));
     vec3 specular = specularMult * light.ambientDiffuseSpecularLightType.z * vec3(texture(material.specularTexture, TexCoord));
@@ -75,12 +71,14 @@ vec3 calcPointLight(LightData light, vec3 viewDir) {
     return (ambient + diffuse + specular) * material.color * light.color * attenuation;
 }
 
+/* Function that returns the color of a fragment after a spot light shines on it */
 vec3 calcSpotLight(LightData light, vec3 viewDir) {
     vec3 lightDir = normalize(FragPos - light.position);  // Direction from light to fragment
     float diffuseMult = max(dot(Normal, -lightDir), 0.0);
 
-    vec3 reflectDir = normalize(reflect(lightDir, Normal));
-    float specularMult = pow(max(dot(reflectDir, -normalize(viewDir)), 0.0), material.shininess);
+    vec3 halfwayDir = normalize(-lightDir - viewDir);
+    float specularMult = pow(max(dot(halfwayDir, Normal), 0.0), material.shininess);
+    specularMult *= modifiedStep(0.0, diffuseMult);
 
     // We will assume that cutoff values in LightData are in radians
     float fragAngle = dot(lightDir, normalize(light.direction));   // Angle between lightDir (direction from light to fragment) and the direction of the spot light
@@ -115,12 +113,5 @@ void main() {
             FragColor += vec4(calcSpotLight(lights[i], FragPos - cameraPos), 0);
         }
     }
-    /*
-    float near = 0.2;
-    float far = 100;
-    float ndc = gl_FragCoord.z * 2.0 - 1.0;
-    float linearDepth = (2.0 * near * far) / (far + near - ndc * (far - near));
-    linearDepth /= far;
-    FragColor = vec4(vec3(linearDepth), 1);
-    */
+
 }
