@@ -9,63 +9,71 @@
 
 #include "shader.hpp"
 
-Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath) {
+namespace {
+    // Helper function to read data from a shader file
+    std::string readShader(const std::string &path) {
+        std::ifstream file;
+        std::string fileContents;
 
-    std::ifstream vShaderFile;
-    std::ifstream fShaderFile;
+        // Turn on exceptions for .failed() and .bad()
+        file.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+        
+        try {
+            file.open(path);
 
-    // Turn on exceptions for .failed() and .bad()
-    vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-    fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+            std::stringstream stream;
+            stream << file.rdbuf();
+            fileContents = stream.str();
+        } catch (const std::exception& e) {
+            std::cerr << "Shader file could not be read: " << e.what() << std::endl;
+        }
 
-    std::string vShaderContents, fShaderContents;
-
-    try {
-        vShaderFile.open(vertexPath);
-        fShaderFile.open(fragmentPath);
-
-        std::stringstream vShaderStream, fShaderStream; 
-        vShaderStream << vShaderFile.rdbuf(); 
-        fShaderStream << fShaderFile.rdbuf();
-
-        vShaderContents = vShaderStream.str();
-        fShaderContents = fShaderStream.str();
-
-    } catch(const std::exception& e) {
-        std::cerr << "Shader file could not be read: " << e.what() << std::endl;
+        return fileContents;
     }
 
-    const char* vShaderCStr = vShaderContents.c_str();
-    const char* fShaderCStr = fShaderContents.c_str();
-    int success;
-    char log[512];
+    unsigned int createShader(std::string shaderSrcCode, GLenum shaderType, std::string path /* Only used for error reporting */) {
+        const char* shaderCStr = shaderSrcCode.c_str();
 
-    unsigned int vShader, fShader;
-    vShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vShader, 1, &vShaderCStr, NULL);
-    glCompileShader(vShader);
+        int success;
+        char log[512];
 
-    glGetShaderiv(vShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vShader, 512, NULL, log);
-        std::cerr << "Error reading shader at " << vertexPath << ':' << log << std::endl;
+        unsigned int shader;
+        
+        shader = glCreateShader(shaderType);
+        glShaderSource(shader, 1, &shaderCStr, NULL);
+        glCompileShader(shader);
+
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(shader, 512, NULL, log);
+            std::cerr << "Error compiling shader at " << path << ':' << log << std::endl;
+        }
+
+        return shader;
     }
+} // namespace
 
-    fShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fShader, 1, &fShaderCStr, NULL);
-    glCompileShader(fShader);
+Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath, const std::string &geometryPath) {
 
-    glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fShader, 512, NULL, log);
-        std::cerr << "Error reading shader at " << fragmentPath << ':' << log << std::endl;
-    }
+    bool hasGeometryShader = (geometryPath == "") ? false : true;
+
+    std::string vShaderContents = readShader(vertexPath);
+    std::string fShaderContents = readShader(fragmentPath);
+    std::string gShaderContents = hasGeometryShader ? readShader(geometryPath) : "";
+
+    unsigned int vShader = createShader(vShaderContents, GL_VERTEX_SHADER, vertexPath);
+    unsigned int fShader = createShader(fShaderContents, GL_FRAGMENT_SHADER, fragmentPath);
+    unsigned int gShader = hasGeometryShader ? createShader(gShaderContents, GL_GEOMETRY_SHADER, geometryPath) : 0;
 
     unsigned int shaderProgram;
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vShader);
     glAttachShader(shaderProgram, fShader);
+    if (hasGeometryShader) glAttachShader(shaderProgram, gShader);
     glLinkProgram(shaderProgram);
+
+    int success;
+    char log[512];
 
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
@@ -78,6 +86,7 @@ Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath) {
     // Cleanup
     glDeleteShader(vShader);
     glDeleteShader(fShader);
+    glDeleteShader(gShader);
 }
 
 /*
