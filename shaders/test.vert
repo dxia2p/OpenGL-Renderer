@@ -10,9 +10,12 @@ layout(std140, binding = 0) uniform Matrices {
     mat4 projection;
     mat4 view;
 };
-uniform mat4 model;
-uniform mat3 normalMatrix;
-uniform mat4 lightSpaceMatrices[MAX_LIGHT_COUNT];  // These matrices must correspond to the lights given in the lights arrays in the fragment shader
+layout(location = 0) uniform mat4 modelMatrix;
+layout(location = 1) uniform mat3 normalMatrix;
+
+layout(std140, binding = 2) uniform directionalShadowMatrices {
+    mat4 lightSpaceMatrices[MAX_LIGHT_COUNT];  // These matrices must correspond to the lights given in the lights arrays in the fragment shader
+};
 
 out vec3 FragPos; // Position of the fragment in world coordinates
 out vec3 Normal;
@@ -20,8 +23,8 @@ out vec2 TexCoord;
 out vec4 FragPosLightSpace[MAX_LIGHT_COUNT];
 
 void main() {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
-    FragPos = vec3(model * vec4(aPos, 1.0));
+    gl_Position = projection * view * modelMatrix * vec4(aPos, 1.0);
+    FragPos = vec3(modelMatrix * vec4(aPos, 1.0));
     Normal = normalMatrix * aNormal;
     TexCoord = aTexCoords;
 

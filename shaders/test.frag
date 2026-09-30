@@ -7,9 +7,9 @@ in vec3 Normal;
 in vec2 TexCoord;
 in vec4 FragPosLightSpace[MAX_LIGHT_COUNT];  // The position of the current fragment in the view (?) space of each light
 
-uniform sampler2DArray shadowMaps;
+layout(location = 2) uniform sampler2DArray shadowMaps;
 
-uniform vec3 cameraPos;
+layout(location = 3) uniform vec3 cameraPos;
 
 struct Material {
     vec3 color;
@@ -17,7 +17,7 @@ struct Material {
     sampler2D specularTexture;
     float shininess;
 };
-uniform Material material;
+layout(location = 4) uniform Material material;
 
 // Lights
 

@@ -17,6 +17,11 @@ Renderer::Renderer(Shader shadowShader) : shadowShader(shadowShader){
     glBindBufferBase(GL_UNIFORM_BUFFER, LIGHTS_UBO_BINDING_POINT, lightsUBO);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(LightData) * MAX_LIGHT_COUNT, NULL, GL_STREAM_DRAW);
 
+    // Generate lightProjViewMatsUBO
+    glGenBuffers(1, &lightsProjViewMatsUBO);
+    glBindBufferBase(GL_UNIFORM_BUFFER, LIGHTS_PROJ_VIEW_MAT_UBO_BINDING_POINT, lightsProjViewMatsUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * MAX_LIGHT_COUNT, NULL, GL_STREAM_DRAW);
+
     // Create fallback textures
     uint8_t rgba[4] = { 255, 255, 255, 255 };
     glGenTextures(1, &fallbackDiffuseTex);
@@ -62,20 +67,25 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
 
     // ----------------------------------------------------------------------- Render shadow maps ---------------------------------------------------------------------
 
-    // Render shadowmaps for directional light
+    // Render shadowmaps for directional shadows
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    shadowShader.use();
-    for(int i = 0; i < lights.size(); i++) {
+
+    glm::mat4 directionalShadowMatrices[MAX_LIGHT_COUNT] = {};
+    for(int i = 0; i < std::min((size_t)MAX_LIGHT_COUNT, lights.size()); i++) {
         if (lights[i]->lightType == LightTypes::DIRECTIONAL) {
-            shadowShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", lights[i]->getViewAndProjectionMatrices(*camera)[0]);
+            directionalShadowMatrices[i] = lights[i]->getViewAndProjectionMatrices(*camera)[0];
         }
     }
+    glBindBuffer(GL_UNIFORM_BUFFER, lightsProjViewMatsUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * MAX_LIGHT_COUNT, directionalShadowMatrices);
+
+    shadowShader.use();
 
     // Render all directional light shadow maps in one pass with a geometry shader
     glBindFramebuffer(GL_FRAMEBUFFER, shadowMapsFBO);
     glClear(GL_DEPTH_BUFFER_BIT);
     for(int i = 0; i < meshes.size(); i++) {
-        shadowShader.setMat4("model", meshes[i].getModelMatrix());
+        shadowShader.setMat4(static_cast<GLint>(ShadowShaderUniformLocation::ModelMatrix), meshes[i].getModelMatrix());
         glBindVertexArray(meshes[i].getVAO());
         glDrawElements(GL_TRIANGLES, meshes[i].getIndexCount(), GL_UNSIGNED_INT, 0);
     }
@@ -110,20 +120,20 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
 
         // Set model matrix
         glm::mat4 modelMatrix = meshes[i].getModelMatrix();
-        shader->setMat4("model", modelMatrix);
+        shader->setMat4(static_cast<GLint>(ObjectShaderUniformLocation::ModelMatrix), modelMatrix);
 
         // Set normal matrix
         glm::mat4 normalMatrix = glm::mat3(glm::transpose(glm::inverse(modelMatrix)));
-        shader->setMat3("normalMatrix", normalMatrix);
+        shader->setMat3(static_cast<GLint>(ObjectShaderUniformLocation::NormalMatrix), normalMatrix);
         
         // Set camera position
-        shader->setVec3("cameraPos", camera->position);
+        shader->setVec3(static_cast<GLint>(ObjectShaderUniformLocation::CameraPos), camera->position);
 
         // Set material uniform
-        shader->setVec3("material.color", meshes[i].material->color);
-        shader->setInt("material.diffuseTexture", DIFFUSE_TEXTURE_UNIT - GL_TEXTURE0);
-        shader->setInt("material.specularTexture", SPECULAR_TEXTURE_UNIT - GL_TEXTURE0);
-        shader->setFloat("material.shininess", meshes[i].material->shininess);
+        shader->setVec3(static_cast<GLint>(ObjectShaderUniformLocation::MaterialColor), meshes[i].material->color);
+        shader->setInt(static_cast<GLint>(ObjectShaderUniformLocation::MaterialDiffuseSampler), DIFFUSE_TEXTURE_UNIT - GL_TEXTURE0);
+        shader->setInt(static_cast<GLint>(ObjectShaderUniformLocation::MaterialSpecularSampler), SPECULAR_TEXTURE_UNIT - GL_TEXTURE0);
+        shader->setFloat(static_cast<GLint>(ObjectShaderUniformLocation::MaterialShininess), meshes[i].material->shininess);
 
         // Bind textures
         glActiveTexture(DIFFUSE_TEXTURE_UNIT);
@@ -131,13 +141,15 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
         glActiveTexture(SPECULAR_TEXTURE_UNIT);
         glBindTexture(GL_TEXTURE_2D, meshes[i].material->hasSpecularTexture() ? meshes[i].material->getSpecularTextureID() : fallbackSpecularTex);
 
+        /*
         // Set uniforms for calculating shadows
         for(int i = 0; i < lights.size(); i++) {
             if (lights[i]->lightType == LightTypes::DIRECTIONAL) {
                 shader->setMat4("lightSpaceMatrices[" + std::to_string(i) + "]", lights[i]->getViewAndProjectionMatrices(*camera)[0]);
             }
         }
-        shader->setInt("shadowMaps", SHADOWMAPS_TEXTURE_UNIT - GL_TEXTURE0);
+            */
+        shader->setInt(static_cast<GLint>(ObjectShaderUniformLocation::DirectionalShadowMaps), SHADOWMAPS_TEXTURE_UNIT - GL_TEXTURE0);
         glActiveTexture(SHADOWMAPS_TEXTURE_UNIT);
         glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMaps);
 

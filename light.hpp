@@ -48,8 +48,8 @@ public:
     LightTypes lightType;
 
     // TODO: Make these vary based on camera properties
-    float nearPlane = 1.0f, farPlane = 15.0f;  
-    float frustumWidth = 10.0f, frustumHeight = 10.0f;
+    float nearPlane = 1.0f, farPlane = 50.0f;  
+
 protected:
     Light(glm::vec3 color, float ambient, float diffuse, float specular, LightTypes lightType) : color(color), ambient(ambient), diffuse(diffuse), specular(specular), lightType(lightType) {}
     glm::vec3 color;
@@ -75,11 +75,13 @@ public:
     std::vector<glm::mat4> getViewAndProjectionMatrices(Camera &camera) const override {
         std::vector<glm::mat4> result;
         glm::mat4 projection = glm::ortho(-frustumWidth, frustumWidth, -frustumHeight, frustumHeight, nearPlane, farPlane);
-        glm::vec3 frustumPos = camera.position - glm::normalize(direction) * 10.0f;  // TODO: Fix this magic number
+        glm::vec3 frustumPos = -glm::normalize(direction) * 20.0f;  // TODO: Fix this magic number
         glm::mat4 view = glm::lookAt(frustumPos, frustumPos + direction, glm::vec3(0.0f, 1.0f, 0.0f));
         result.push_back(projection * view);
         return result;
     }
+
+    float frustumWidth = 20.0f, frustumHeight = 20.0f;
 
     glm::vec3 direction;
 
