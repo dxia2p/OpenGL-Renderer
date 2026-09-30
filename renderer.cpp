@@ -6,7 +6,7 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
-Renderer::Renderer() {
+Renderer::Renderer(Shader shadowShader) : shadowShader(shadowShader){
     // Generate matricesUBO
     glGenBuffers(1, &matricesUBO);
     glBindBufferBase(GL_UNIFORM_BUFFER, MATRICES_UBO_BINDING_POINT, matricesUBO);
@@ -42,10 +42,13 @@ Renderer::Renderer() {
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
     glGenFramebuffers(1, &shadowMapsFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowMapsFBO);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMaps, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -57,21 +60,29 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
     if (camera == nullptr) std::cerr << "Camera is nullptr in renderer!" << std::endl;
     if (skybox == nullptr) std::cerr << "Skybox is nullptr in renderer!" << std::endl;
 
-    // Render shadowmaps
-    int shadowMapLayer = 0;
-    for(int i = 0; i < lights.size(); i++) {
-        if (lights[i]->lightType != LightTypes::DIRECTIONAL) {
-            continue;
-        }
+    // ----------------------------------------------------------------------- Render shadow maps ---------------------------------------------------------------------
 
-        // Render scene from light's perspective
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowMapsFBO);
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMaps, 0, shadowMapLayer);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        // Render scene
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // Render shadowmaps for directional light
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    shadowShader.use();
+    for(int i = 0; i < lights.size(); i++) {
+        if (lights[i]->lightType == LightTypes::DIRECTIONAL) {
+            shadowShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", lights[i]->getViewAndProjectionMatrices(*camera)[0]);
+        }
     }
+
+    // Render all directional light shadow maps in one pass with a geometry shader
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapsFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    for(int i = 0; i < meshes.size(); i++) {
+        shadowShader.setMat4("model", meshes[i].getModelMatrix());
+        glBindVertexArray(meshes[i].getVAO());
+        glDrawElements(GL_TRIANGLES, meshes[i].getIndexCount(), GL_UNSIGNED_INT, 0);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // ------------------------------------------------------------------------ Render meshes -----------------------------------------------------------------------------------
+   glViewport(0, 0, 800, 600);  // TODO: CHANGE THIS
 
     // Set UBO for view and projection matrices
     glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
@@ -98,7 +109,12 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
         shader->use();
 
         // Set model matrix
-        shader->setMat4("model", meshes[i].getModelMatrix());
+        glm::mat4 modelMatrix = meshes[i].getModelMatrix();
+        shader->setMat4("model", modelMatrix);
+
+        // Set normal matrix
+        glm::mat4 normalMatrix = glm::mat3(glm::transpose(glm::inverse(modelMatrix)));
+        shader->setMat3("normalMatrix", normalMatrix);
         
         // Set camera position
         shader->setVec3("cameraPos", camera->position);
@@ -115,9 +131,21 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
         glActiveTexture(SPECULAR_TEXTURE_UNIT);
         glBindTexture(GL_TEXTURE_2D, meshes[i].material->hasSpecularTexture() ? meshes[i].material->getSpecularTextureID() : fallbackSpecularTex);
 
+        // Set uniforms for calculating shadows
+        for(int i = 0; i < lights.size(); i++) {
+            if (lights[i]->lightType == LightTypes::DIRECTIONAL) {
+                shader->setMat4("lightSpaceMatrices[" + std::to_string(i) + "]", lights[i]->getViewAndProjectionMatrices(*camera)[0]);
+            }
+        }
+        shader->setInt("shadowMaps", SHADOWMAPS_TEXTURE_UNIT - GL_TEXTURE0);
+        glActiveTexture(SHADOWMAPS_TEXTURE_UNIT);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMaps);
+
         // Draw the mesh
         glDrawElements(GL_TRIANGLES, meshes[i].getIndexCount(), GL_UNSIGNED_INT, 0);
     }
+
+    // ------------------------------------------------------------------------- Render skybox --------------------------------------------------------------------------------------------------
 
     // Render the skybox last
     glDepthMask(GL_FALSE);  // Disable depth writing to ensure skybox is always drawn behind other objects

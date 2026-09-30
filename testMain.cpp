@@ -149,8 +149,8 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetCursorPosCallback(window, mouseCallback);
 
-
-    Renderer renderer;
+    Shader shadowShader(std::string(ASSETS_DIR) + "shaders/shadowmap.vert", std::string(ASSETS_DIR) + "shaders/shadowmap.frag", std::string(ASSETS_DIR) + "shaders/shadowmapSingleDir.geom");
+    Renderer renderer(shadowShader);
     // ------------------------------------------------------------ Set up skybox ------------------------------------------------------------
     std::vector<std::string> skyboxFaces = {
         std::string(ASSETS_DIR) + "skyboxes/skybox/right.jpg",
@@ -168,16 +168,17 @@ int main() {
     Shader shader(std::string(ASSETS_DIR) + "shaders/test.vert", std::string(ASSETS_DIR) + "shaders/test.frag");
     ModelLoader loader;
     std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/backpack/backpack.obj", &shader);
-    std::unique_ptr<DirectionalLight> dirLight = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.2f, 0.7f, 0.3f, glm::vec3(0, -0.5, 1));
-    std::unique_ptr<PointLight> pointLight1 =  std::make_unique<PointLight>(glm::vec3(0, 1, 0), 0.2f, 0.7f, 0.3f, glm::vec3(4, 0, 1), 0.045, 0.0075);
-    std::unique_ptr<PointLight> pointLight2 = std::make_unique<PointLight>(glm::vec3(1, 0, 0), 0.2f, 0.7f, 0.3f, glm::vec3(-4, 0, 1), 0.045, 0.0075);
+    std::unique_ptr<DirectionalLight> dirLight = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(0, -0.4, 1));
+    std::unique_ptr<PointLight> pointLight1 =  std::make_unique<PointLight>(glm::vec3(0, 1, 0), 0.1f, 0.7f, 0.3f, glm::vec3(4, 0, 1), 0.045, 0.0075);
+    std::unique_ptr<PointLight> pointLight2 = std::make_unique<PointLight>(glm::vec3(1, 0, 0), 0.1f, 0.7f, 0.3f, glm::vec3(-4, 0, 1), 0.045, 0.0075);
     //std::unique_ptr<SpotLight> flashlight = std::make_unique<SpotLight>(glm::vec3(1, 1, 1), 0.1f, 0.8f, 0.3f, cam.position, cam.getFront(), 0.014, 0.0007, glm::radians(12.0f), glm::radians(15.0f));
     std::vector<Light *> lights = {dirLight.get(), pointLight1.get(), pointLight2.get()/*, flashlight.get()*/};
 
     // Default cube
     std::vector<Mesh> cube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader);
-    cube[0].scale = glm::vec3(100.0f, 1.0, 100.0f);
+    cube[0].scale = glm::vec3(30.0f, 1.0, 30.0f);
     cube[0].position = glm::vec3(0.0f, -4.0f, 0.0f);
+    cube[0].rotation = glm::quat(glm::vec3(0.0f, 0.0, glm::radians(30.0f)));
     cube[0].material->shininess = 64.0f;
     meshes.insert(meshes.end(), cube.begin(), cube.end());
 

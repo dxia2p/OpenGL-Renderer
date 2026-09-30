@@ -6,6 +6,7 @@
 #include "mesh.hpp"
 #include "skybox.hpp"
 
+const GLenum SHADOWMAPS_TEXTURE_UNIT = GL_TEXTURE2;
 
 class Renderer {
 public:
@@ -14,7 +15,7 @@ public:
     static constexpr unsigned int LIGHTS_UBO_BINDING_POINT = 1;
     static constexpr unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
-    Renderer();
+    Renderer(Shader shadowShader);
     void draw(std::vector<Mesh> &meshes, std::vector<Light *> &lights);
 
     void setCamera(Camera *camera) { this->camera = camera; }
@@ -27,6 +28,7 @@ private:
     Skybox *skybox = nullptr;
     unsigned int shadowMapsFBO;
     unsigned int shadowMaps;
+    Shader shadowShader;
 };
 
 #endif
