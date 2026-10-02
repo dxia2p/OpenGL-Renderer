@@ -1,36 +1,38 @@
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-
-#include <cstdio>
+#include <algorithm>
+#include <glm/fwd.hpp>
+#include <glm/trigonometric.hpp>
 #include <iostream>
-#include <filesystem>
 
-#include <glad/glad.h>
+#include "glad/glad.h"
 #include <GLFW/glfw3.h>
+#include <memory>
 #include <string>
 
 #include "camera.hpp"
+#include "light.hpp"
+#include "modelLoader.hpp"
+#include "mesh.hpp"
 #include "shader.hpp"
-#include "model.hpp"
-
-constexpr float SCR_WIDTH = 800;
-constexpr float SCR_HEIGHT = 600;
+#include "renderer.hpp"
+#include "skybox.hpp"
 
 float deltaTime = 0;
-float prevFrameTime = 0;
-
+float prevTime = 0;
 bool holdingRightClick = false;
 
-float cameraMoveSpeed = 4.0f;
-Camera camera = Camera(glm::vec3(0.0, 0.0, 5.0), SCR_WIDTH/SCR_HEIGHT);
+Camera cam(glm::vec3(0, 0, 5), 800.0/600);
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+std::string glmVec3ToString(glm::vec3 v) {
+    return std::to_string(v.x) + ", " + std::to_string(v.y) + ", " + std::to_string(v.z);
+}
+
+void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
 void processInput(GLFWwindow *window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
 
@@ -43,167 +45,173 @@ void processInput(GLFWwindow *window) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 
-    glm::vec2 moveDir = glm::vec2(0);
-    if (glfwGetKey(window, GLFW_KEY_W))
-        moveDir.y += 1; 
-    if (glfwGetKey(window, GLFW_KEY_S))
-        moveDir.y -= 1;
-    if (glfwGetKey(window, GLFW_KEY_A))
-        moveDir.x -= 1;
-    if (glfwGetKey(window, GLFW_KEY_D))
-        moveDir.x += 1;
+    // Camera keyboard movement
+    float cameraSpeed = 4.0f;
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        cam.position += cam.getFront() * deltaTime * cameraSpeed;       
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        cam.position -= cam.getFront() * deltaTime * cameraSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        cam.position -= cam.getRight() * deltaTime * cameraSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        cam.position += cam.getRight() * deltaTime * cameraSpeed;
+    }
 
-    if (moveDir.x != 0 || moveDir.y != 0)
-        moveDir = glm::normalize(moveDir);
-    moveDir *= cameraMoveSpeed;
-    camera.position += deltaTime * moveDir.y * camera.getFront();
-    camera.position += deltaTime * moveDir.x * camera.getRight();
-
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
-        camera.position += deltaTime * camera.getUp();
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL))
-        camera.position -= deltaTime * camera.getUp();
 }
-
 void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
     static double lastX, lastY;
     if (holdingRightClick)
-        camera.processMouse(xpos - lastX, ypos - lastY);
+        cam.processMouse(xpos - lastX, ypos - lastY);
     lastX = xpos;
     lastY = ypos;
 }
 
+void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char *message, const void *userParam) {
+    // ignore non-significant error/warning codes
+    if(id == 131169 || id == 131185 || id == 131218 || id == 131204) return; 
+
+    std::cout << "---------------" << std::endl;
+    std::cout << "Debug message (" << id << "): " <<  message << std::endl;
+
+    switch (source)
+    {
+        case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
+        case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
+        case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
+    } std::cout << std::endl;
+
+    switch (type)
+    {
+        case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break; 
+        case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
+        case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
+        case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
+        case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
+    } std::cout << std::endl;
+    
+    switch (severity)
+    {
+        case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
+        case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
+        case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
+    } std::cout << std::endl;
+    std::cout << std::endl;
+}
+
 int main() {
-    // -------------------------------------------- GLFW --------------------------------------------
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    #ifdef DEBUG_MODE
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+    #endif
+
+    GLFWwindow *window = glfwCreateWindow(800, 600, "Test", NULL, NULL);
     if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
+        std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
 
-    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
 
-    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    #ifdef DEBUG_MODE
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    int flags; 
+    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(glDebugOutput, nullptr);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    }
+
+    #endif
+
+    glViewport(0, 0, 800, 600);
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetCursorPosCallback(window, mouseCallback);
-    glEnable(GL_DEPTH_TEST);
 
-    // -------------------------------------------- ImGui --------------------------------------------
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsClassic();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 460");
+    Shader shadowShader(std::string(ASSETS_DIR) + "shaders/shadowmap.vert", std::string(ASSETS_DIR) + "shaders/shadowmap.frag", std::string(ASSETS_DIR) + "shaders/shadowmapSingleDir.geom");
+    Renderer renderer(shadowShader);
+    // ------------------------------------------------------------ Set up skybox ------------------------------------------------------------
+    std::vector<std::string> skyboxFaces = {
+        std::string(ASSETS_DIR) + "skyboxes/skybox/right.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/left.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/top.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/bottom.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/front.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/skybox/back.jpg"
+    };
+    Shader skyboxShader(std::string(ASSETS_DIR) + "shaders/skybox.vert", std::string(ASSETS_DIR) + "shaders/skybox.frag");
+    Skybox skybox(skyboxFaces, &skyboxShader, false);
+    renderer.setSkybox(&skybox);
 
-    // -------------------------------------------- Shaders and Models --------------------------------------------
-    std::string shaderBasePath = std::string(ASSETS_DIR) + "shaders/"; 
-    Shader lightSourceShader = Shader(shaderBasePath + "vertexShader.vert", shaderBasePath + "lightSource.frag");
+    // ------------------------------------------------------------ Set up mesh, camera and shaders ------------------------------------------------------------
+    Shader shader(std::string(ASSETS_DIR) + "shaders/vertexShader.vert", std::string(ASSETS_DIR) + "shaders/fragmentShader.frag");
+    ModelLoader loader;
+    std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/backpack/backpack.obj", &shader);
+    //std::unique_ptr<DirectionalLight> dirLight = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(0, -0.4, 1));
+    // std::unique_ptr<DirectionalLight> dirLight2 = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(1, -0.4, 0));
+    std::unique_ptr<PointLight> pointLight1 =  std::make_unique<PointLight>(glm::vec3(0, 1, 0), 0.1f, 0.7f, 0.3f, glm::vec3(4, 0, 1), 0.045, 0.0075);
+    std::unique_ptr<PointLight> pointLight2 = std::make_unique<PointLight>(glm::vec3(1, 0, 0), 0.1f, 0.7f, 0.3f, glm::vec3(-4, 0, 1), 0.045, 0.0075);
+    //std::unique_ptr<SpotLight> flashlight = std::make_unique<SpotLight>(glm::vec3(1, 1, 1), 0.1f, 0.8f, 0.3f, cam.position, cam.getFront(), 0.014, 0.0007, glm::radians(12.0f), glm::radians(15.0f));
+    std::unique_ptr<SpotLight> spotLight = std::make_unique<SpotLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(0, 4, 5), glm::vec3(0, -1, -1), 0.014, 0.0007, glm::radians(12.0f), glm::radians(15.0f));
+    std::vector<Light *> lights = {/*dirLight.get(), */pointLight1.get(), pointLight2.get(), spotLight.get()/*, flashlight.get()*/};
 
-    Shader litShader = Shader(shaderBasePath + "vertexShader.vert", shaderBasePath + "lit.frag");
-    litShader.use();
-    litShader.setVec3("directionalLight.ambient", 0.1f, 0.1f, 0.1f);
-    litShader.setVec3("directionalLight.diffuse", 0.5f, 0.5f, 0.5f);
-    litShader.setVec3("directionalLight.specular", 0.5f, 0.5f, 0.5f);
-    litShader.setVec3("directionalLight.direction", 1.0f, -1.0f, -1.0f);
+    // Default cube
+    std::vector<Mesh> cube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader);
+    cube[0].scale = glm::vec3(30.0f, 1.0, 30.0f);
+    cube[0].position = glm::vec3(0.0f, -4.0f, 0.0f);
+    // cube[0].rotation = glm::quat(glm::vec3(0.0f, 0.0, glm::radians(30.0f)));
+    cube[0].material->shininess = 64.0f;
+    meshes.insert(meshes.end(), cube.begin(), cube.end());
 
-    /*
-    std::string modelBasePath = std::string(ASSETS_DIR) + "models/";
-    Model model = Model(modelBasePath + "Monkey.obj");
-    */
+    std::vector<Mesh> cube1 = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader);
+    cube1[0].position = spotLight->position;
+    meshes.insert(meshes.end(), cube1.begin(), cube1.end());
 
-    // -------------------------------------------- Model selection stuff --------------------------------------------
-    std::string supportedExtensions;
-    Assimp::Importer importer;
-    importer.GetExtensionList(supportedExtensions);
-    std::cout << "Supported extensions: " << supportedExtensions << std::endl;
+    renderer.setCamera(&cam);
+    
+    while (!glfwWindowShouldClose(window)) {
+        deltaTime = glfwGetTime() - prevTime;
+        prevTime = glfwGetTime();
 
-
-    std::vector<Model> models;
-    std::vector<std::string> modelNames;
-    std::string modelsPath = std::string(ASSETS_DIR) + "models/";
-
-    // Get paths of all models with valid extensions
-    int modelCount = 0;
-    for (const auto &entry : std::filesystem::directory_iterator(modelsPath)) {
-        std::string path = entry.path();
-        std::string ext = path.substr(path.find_last_of("."));
-        if (supportedExtensions.find(ext) != std::string::npos) {
-            modelNames.push_back(path);
-        }
-        modelCount++;
-    }
-
-    // Load models
-    for(int i = 0; i < modelNames.size(); i++) {
-        models.push_back(Model(modelNames[i]));
-    }
-
-    std::string selectedModel;
-    int selectedModelIndex;
-    // -------------------------------------------- Main Loop --------------------------------------------
-
-    while(!glfwWindowShouldClose(window)) {
-        deltaTime = glfwGetTime() - prevFrameTime;
-        prevFrameTime = glfwGetTime();
-        
         processInput(window);
+
+        /* LOGIC */
+        //spotLight->direction = cam.getFront();
+        //spotLight->position = cam.position;
+
+        /* END OF LOGIC */
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        // Draw stuff
-
-        glm::mat4 view = camera.getLookatMat();
-        glm::mat4 projection = camera.getProjectionMat();
-        models[selectedModelIndex].draw(litShader, view, projection);
-
-        // ...
-        ImGui::Begin("My name is window, ImGUI window", NULL, ImGuiWindowFlags_NoSavedSettings);
-        ImGui::Text("Hello there adventurer");
-        ImGui::Text("Camera position: (%f, %f, %f)", camera.position.x, camera.position.y, camera.position.z);
-        if(ImGui::BeginCombo("Select Model", selectedModel.c_str())) {
-            for(int i = 0; i < modelNames.size(); i++) {
-                bool is_selected = (selectedModelIndex == i);
-                if (ImGui::Selectable(modelNames[i].c_str(), is_selected)) {
-                    selectedModelIndex = i;
-                    selectedModel = modelNames[i];
-                }
-                if (is_selected) 
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::End();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        renderer.draw(meshes, lights);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
     glfwTerminate();
+
     return 0;
 }

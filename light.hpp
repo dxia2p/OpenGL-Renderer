@@ -76,7 +76,11 @@ public:
         std::vector<glm::mat4> result;
         glm::mat4 projection = glm::ortho(-frustumWidth, frustumWidth, -frustumHeight, frustumHeight, nearPlane, farPlane);
         glm::vec3 frustumPos = -glm::normalize(direction) * 20.0f;  // TODO: Fix this magic number
-        glm::mat4 view = glm::lookAt(frustumPos, frustumPos + direction, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+        if (glm::dot(glm::normalize(direction), glm::normalize(upVector)) > 0.95f || glm::dot(glm::normalize(-direction), glm::normalize(upVector)) > 0.95f) {  // If the vectors pare almost parallel, then we need to choose a different up vector to calculate the view matrix
+            upVector = glm::vec3(1.0f, 0.0f, 0.0f);
+        }
+        glm::mat4 view = glm::lookAt(frustumPos, frustumPos + direction, upVector);
         result.push_back(projection * view);
         return result;
     }
@@ -104,6 +108,7 @@ public:
 
     std::vector<glm::mat4> getViewAndProjectionMatrices(Camera &camera) const override {
         std::vector<glm::mat4> result;
+
         return result;
     }
 
@@ -129,6 +134,13 @@ public:
 
     std::vector<glm::mat4> getViewAndProjectionMatrices(Camera &camera) const override {
         std::vector<glm::mat4> result;
+        glm::mat4 projection = glm::perspective(outerCutoff * 2, 1.0f, nearPlane, farPlane);
+        glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+        if (glm::dot(glm::normalize(direction), glm::normalize(upVector)) > 0.95f) {  // If the vectors point in almost the same direction, then we need to choose a different up vector to calculate the view matrix
+            upVector = glm::vec3(1.0f, 0.0f, 0.0f);
+        }
+        glm::mat4 view = glm::lookAt(position, position + direction, upVector);
+        result.push_back(projection * view);
         return result;
     }
 

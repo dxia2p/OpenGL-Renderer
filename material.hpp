@@ -22,10 +22,10 @@ struct Texture {
 
 bool operator==(Texture &t1, Texture &t2);
 
+/*
 const std::string SHADER_DIFFUSE_MAP_NAMING_CONVENTION = "material.diffuseTexture";
 const std::string SHADER_SPECULAR_MAP_NAMING_CONVENTION = "material.specularTexture";
-const GLenum DIFFUSE_TEXTURE_UNIT = GL_TEXTURE0;
-const GLenum SPECULAR_TEXTURE_UNIT = GL_TEXTURE1;
+*/
 
 class Material {
 public:

@@ -21,7 +21,11 @@ enum class ShadowShaderUniformLocation : GLint {
     ModelMatrix = 0,
 };
 
-const GLenum SHADOWMAPS_TEXTURE_UNIT = GL_TEXTURE2;
+enum class TextureUnits : GLenum {
+    Diffuse = GL_TEXTURE0,
+    Specular = GL_TEXTURE1,
+    DirectionalShadowmaps = GL_TEXTURE2,
+};
 
 class Renderer {
 public:

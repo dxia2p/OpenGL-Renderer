@@ -115,8 +115,9 @@ vec3 calcSpotLight(LightData light, vec3 viewDir, int lightIndex) {
     float dist = distance(light.position, FragPos);
     float attenuation = 1.0 / (1 + light.cutoffsAndAttenuation.z * dist + light.cutoffsAndAttenuation.w * dist * dist);
 
+    float shadow = shadowCalculation(shadowMaps, lightIndex, FragPosLightSpace[lightIndex], light.direction);
 
-    return (ambient + diffuse + specular) * material.color * light.color * attenuation;
+    return (ambient + (1.0 - shadow) * (diffuse + specular)) * material.color * light.color * attenuation;
 }
 
 out vec4 FragColor;

@@ -72,7 +72,7 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
 
     glm::mat4 directionalShadowMatrices[MAX_LIGHT_COUNT] = {};
     for(int i = 0; i < std::min((size_t)MAX_LIGHT_COUNT, lights.size()); i++) {
-        if (lights[i]->lightType == LightTypes::DIRECTIONAL) {
+        if (lights[i]->lightType == LightTypes::DIRECTIONAL || lights[i]->lightType == LightTypes::SPOT) {
             directionalShadowMatrices[i] = lights[i]->getViewAndProjectionMatrices(*camera)[0];
         }
     }
@@ -131,14 +131,14 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
 
         // Set material uniform
         shader->setVec3(static_cast<GLint>(ObjectShaderUniformLocation::MaterialColor), meshes[i].material->color);
-        shader->setInt(static_cast<GLint>(ObjectShaderUniformLocation::MaterialDiffuseSampler), DIFFUSE_TEXTURE_UNIT - GL_TEXTURE0);
-        shader->setInt(static_cast<GLint>(ObjectShaderUniformLocation::MaterialSpecularSampler), SPECULAR_TEXTURE_UNIT - GL_TEXTURE0);
+        shader->setInt(static_cast<GLint>(ObjectShaderUniformLocation::MaterialDiffuseSampler), static_cast<GLenum>(TextureUnits::Diffuse) - GL_TEXTURE0);
+        shader->setInt(static_cast<GLint>(ObjectShaderUniformLocation::MaterialSpecularSampler), static_cast<GLenum>(TextureUnits::Specular) - GL_TEXTURE0);
         shader->setFloat(static_cast<GLint>(ObjectShaderUniformLocation::MaterialShininess), meshes[i].material->shininess);
 
         // Bind textures
-        glActiveTexture(DIFFUSE_TEXTURE_UNIT);
+        glActiveTexture(static_cast<GLenum>(TextureUnits::Diffuse));
         glBindTexture(GL_TEXTURE_2D, meshes[i].material->hasDiffuseTexture() ? meshes[i].material->getDiffuseTextureID() : fallbackDiffuseTex);
-        glActiveTexture(SPECULAR_TEXTURE_UNIT);
+        glActiveTexture(static_cast<GLenum>(TextureUnits::Specular));
         glBindTexture(GL_TEXTURE_2D, meshes[i].material->hasSpecularTexture() ? meshes[i].material->getSpecularTextureID() : fallbackSpecularTex);
 
         /*
@@ -149,8 +149,8 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
             }
         }
             */
-        shader->setInt(static_cast<GLint>(ObjectShaderUniformLocation::DirectionalShadowMaps), SHADOWMAPS_TEXTURE_UNIT - GL_TEXTURE0);
-        glActiveTexture(SHADOWMAPS_TEXTURE_UNIT);
+        shader->setInt(static_cast<GLint>(ObjectShaderUniformLocation::DirectionalShadowMaps), static_cast<GLenum>(TextureUnits::DirectionalShadowmaps) - GL_TEXTURE0);
+        glActiveTexture(static_cast<GLenum>(TextureUnits::DirectionalShadowmaps));
         glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMaps);
 
         // Draw the mesh
