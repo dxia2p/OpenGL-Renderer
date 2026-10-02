@@ -10,19 +10,21 @@ find_package(assimp CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
 
-if(${TEST})
+# if(${TEST})
 
-    set(SOURCES testMain.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp renderer.cpp light.cpp skybox.cpp)
+#     set(SOURCES testMain.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp renderer.cpp light.cpp skybox.cpp)
 
-else()
+# else()
 
-    SET(SOURCES main.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp renderer.cpp light.cpp skybox.cpp)
+#     SET(SOURCES main.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp renderer.cpp light.cpp skybox.cpp)
 
-endif()
+# endif()
+
+SET(SOURCES main.cpp thirdparty/glad.c shader.cpp mesh.cpp camera.cpp material.cpp modelLoader.cpp renderer.cpp light.cpp skybox.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-if (${TEST})
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug" OR ${CMAKE_BUILD_TYPE} STREQUAL "DEBUG")
     target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG_MODE)
 endif()
 
