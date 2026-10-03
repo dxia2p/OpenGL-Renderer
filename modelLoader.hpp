@@ -1,6 +1,7 @@
 #ifndef MODELLOADER_H
 #define MODELLOADER_H
 
+#include <filesystem>
 #include <map>
 #include <string>
 
@@ -14,11 +15,11 @@ class ModelLoader {
 public:
     ModelLoader() {}
     
-    std::vector<Mesh> load(const std::string &path, Shader *defaultShader, bool flipUVs);
+    std::vector<Mesh> load(const std::filesystem::path &path, Shader *defaultShader, bool flipUVs);
     Mesh loadCube(Shader *defaultShader);
 private:
-    std::unordered_map<std::string, Texture> loadedTextures;
-    std::string currentDirectory;  // currentDirectory includes a slash at the end
+    std::map<std::filesystem::path, Texture> loadedTextures;
+    std::filesystem::path currentDirectory;
     Shader *defaultShader;  // Stores a default shader we put into created materials
 
     void processNode(aiNode *node, const aiScene *scene, std::vector<Mesh> &meshes);

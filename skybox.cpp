@@ -50,7 +50,7 @@ float skyboxVertices[] = {
 };
 }
 
-Skybox::Skybox(std::vector<std::string> facePaths, Shader *shader, bool hdr) : shader(shader) {
+Skybox::Skybox(const std::vector<std::filesystem::path> &facePaths, Shader *shader, bool hdr) : shader(shader) {
     if (facePaths.size() != 6) {
         std::cerr << "A skybox cannot have " << facePaths.size() << " faces!" << std::endl;
         return;
@@ -60,11 +60,10 @@ Skybox::Skybox(std::vector<std::string> facePaths, Shader *shader, bool hdr) : s
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
 
     int width, height, numChannels;
-    for(int i = 0; i < facePaths.size(); i++) {
-        unsigned char *data = stbi_load(facePaths[i].c_str(), &width, &height, &numChannels, 0);
+    for(size_t i = 0; i < facePaths.size(); i++) {
+        unsigned char *data = stbi_load(facePaths[i].string().c_str(), &width, &height, &numChannels, 0);
         if (!data) {
-            std::cerr << "Failed to load cubemap texture at " << facePaths[i] << std::endl;
-            stbi_image_free(data);
+            std::cerr << "Failed to load cubemap texture at " << facePaths[i].string() << std::endl;
             return;
         }
 
@@ -93,3 +92,7 @@ Skybox::Skybox(std::vector<std::string> facePaths, Shader *shader, bool hdr) : s
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 }
+
+Skybox::Skybox(const std::vector<std::string> &facePaths, Shader *shader, bool hdr)
+    : Skybox(std::vector<std::filesystem::path>(facePaths.begin(), facePaths.end()), shader, hdr) {}
+

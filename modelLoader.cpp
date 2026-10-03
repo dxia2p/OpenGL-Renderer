@@ -1,5 +1,6 @@
 #include "modelLoader.hpp"
 
+#include <algorithm>
 #include <assimp/material.h>
 #include <iostream>
 #include <iterator>
@@ -12,13 +13,13 @@
 
 namespace {
 // Helper function for loading a texture from a file and sending it to the gpu
-unsigned int textureFromFile(std::string path, bool srgb) {
+unsigned int textureFromFile(const std::filesystem::path &path, bool srgb) {
     stbi_set_flip_vertically_on_load(true);
     int width, height, numChannels;
-    unsigned char *data = stbi_load(path.c_str(), &width, &height, &numChannels, 0);
+    unsigned char *data = stbi_load(path.string().c_str(), &width, &height, &numChannels, 0);
     // Check for errors loading data
     if (!data) {
-        std::cerr << "Error loading texture at path: " << path << std::endl;
+        std::cerr << "Error loading texture at path: " << path.string() << std::endl;
         return 0;
     }
     //
@@ -126,19 +127,18 @@ unsigned int textureFromFile(std::string path, bool srgb) {
 // }
 
 
-std::vector<Mesh> ModelLoader::load(const std::string &path, Shader *defaultShader, bool flipUVs) {
+std::vector<Mesh> ModelLoader::load(const std::filesystem::path &path, Shader *defaultShader, bool flipUVs) {
     Assimp::Importer importer;
     unsigned int flags = aiProcess_Triangulate |  aiProcess_PreTransformVertices;
     if (flipUVs) flags |= aiProcess_FlipUVs;
-    const aiScene *scene = importer.ReadFile(path, flags);
+    const aiScene *scene = importer.ReadFile(path.string(), flags);
     if (scene == nullptr) {
-        std::cerr << "Error loading model at: " + path << std::endl;
+        std::cerr << "Error loading model at: " << path.string() << std::endl;
         return std::vector<Mesh>();
     }
 
     // Set currentDirectory
-    size_t lastSlash = path.find_last_of('/');
-    currentDirectory = path.substr(0, lastSlash + 1);  // Add one to lastSlash to keep the slash at the end
+    currentDirectory = path.parent_path();
     
     this->defaultShader = defaultShader;
 
@@ -220,15 +220,44 @@ Texture ModelLoader::loadTextures(aiMaterial *mat, aiTextureType aiType, Texture
         // This function only gets the first texture of the given type in the material (for now)
         aiString str;
         mat->GetTexture(aiType, 0, &str);  // GetTexture puts relative path into str (most of the time)
-        std::string textureDir = currentDirectory + str.C_Str();
-        std::unordered_map<std::string, Texture>::iterator it = loadedTextures.find(textureDir); 
-        if (it != loadedTextures.end()) {
-            result = loadedTextures[textureDir];
+        
+        std::string rawTexturePath = str.C_Str();
+        // Replace Windows backslashes with forward slashes for cross-platform safety
+        std::replace(rawTexturePath.begin(), rawTexturePath.end(), '\\', '/');
+
+        std::filesystem::path texP(rawTexturePath);
+        std::filesystem::path texturePath;
+
+        if (texP.is_absolute() && std::filesystem::exists(texP)) {
+            texturePath = texP;
+        } else if (texP.is_absolute()) {
+            // If absolute path from an external machine doesn't exist, try relative to currentDirectory
+            texturePath = currentDirectory / texP.filename();
         } else {
-            result.id = textureFromFile(textureDir, internalType == TextureType::Diffuse ? true : false);  // TODO: Change this to handle more texture types
+            // Relative path: remove any leading slashes
+            while (!rawTexturePath.empty() && (rawTexturePath.front() == '/' || rawTexturePath.front() == '\\')) {
+                rawTexturePath.erase(rawTexturePath.begin());
+            }
+            texturePath = (currentDirectory / std::filesystem::path(rawTexturePath)).lexically_normal();
+        }
+
+        // If the file doesn't exist at texturePath, check if the filename exists in currentDirectory or a textures subdirectory
+        if (!std::filesystem::exists(texturePath)) {
+            if (std::filesystem::exists(currentDirectory / texP.filename())) {
+                texturePath = currentDirectory / texP.filename();
+            } else if (std::filesystem::exists(currentDirectory / "textures" / texP.filename())) {
+                texturePath = currentDirectory / "textures" / texP.filename();
+            }
+        }
+
+        auto it = loadedTextures.find(texturePath); 
+        if (it != loadedTextures.end()) {
+            result = it->second;
+        } else {
+            result.id = textureFromFile(texturePath, internalType == TextureType::Diffuse ? true : false);  // TODO: Change this to handle more texture types
             result.textureType = internalType;
-            result.path = textureDir;
-            loadedTextures[textureDir] = result;
+            result.path = texturePath;
+            loadedTextures[texturePath] = result;
         }
 
     } else {

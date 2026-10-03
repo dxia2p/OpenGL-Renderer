@@ -133,12 +133,12 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
 
 struct ModelEntry {
     std::string displayName;
-    std::string fullPath;
+    std::filesystem::path fullPath;
 };
 
-std::vector<ModelEntry> scanModelFiles(const std::string &baseDir) {
+std::vector<ModelEntry> scanModelFiles(const std::filesystem::path &baseDir) {
     std::vector<ModelEntry> results;
-    std::filesystem::path modelsDir = std::filesystem::path(baseDir) / "models";
+    std::filesystem::path modelsDir = baseDir / "models";
     if (!std::filesystem::exists(modelsDir)) {
         return results;
     }
@@ -165,11 +165,9 @@ std::vector<ModelEntry> scanModelFiles(const std::string &baseDir) {
 
                 if (matches) {
                     std::error_code ec;
-                    std::string relPath = std::filesystem::relative(entry.path(), baseDir, ec).string();
-                    if (ec || relPath.empty()) {
-                        relPath = entry.path().filename().string();
-                    }
-                    results.push_back({relPath, entry.path().string()});
+                    std::filesystem::path rel = std::filesystem::relative(entry.path(), baseDir, ec);
+                    std::string relPath = (!ec && !rel.empty()) ? rel.generic_string() : entry.path().filename().generic_string();
+                    results.push_back({relPath, entry.path()});
                 }
             }
         }
@@ -219,27 +217,29 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
 
-    Shader directionalShadowShader(std::string(ASSETS_DIR) + "shaders/shadowmap.vert", std::string(ASSETS_DIR) + "shaders/directionalShadowmap.frag", std::string(ASSETS_DIR) + "shaders/directionalShadowmap.geom");
-    Shader pointShadowShader(std::string(ASSETS_DIR) + "shaders/shadowmap.vert", std::string(ASSETS_DIR) + "shaders/pointShadowmap.frag", std::string(ASSETS_DIR) + "shaders/pointShadowmap.geom");
+    const std::filesystem::path assetsDir = ASSETS_DIR;
+
+    Shader directionalShadowShader(assetsDir / "shaders/shadowmap.vert", assetsDir / "shaders/directionalShadowmap.frag", assetsDir / "shaders/directionalShadowmap.geom");
+    Shader pointShadowShader(assetsDir / "shaders/shadowmap.vert", assetsDir / "shaders/pointShadowmap.frag", assetsDir / "shaders/pointShadowmap.geom");
     Renderer renderer(directionalShadowShader, pointShadowShader, windowWidth, windowHeight);
     // ------------------------------------------------------------ Set up skybox ------------------------------------------------------------
-    std::vector<std::string> daySkyboxFaces = {
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/right.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/left.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/top.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/bottom.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/front.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/back.jpg"
+    std::vector<std::filesystem::path> daySkyboxFaces = {
+        assetsDir / "skyboxes/SkyboxDay/right.jpg",
+        assetsDir / "skyboxes/SkyboxDay/left.jpg",
+        assetsDir / "skyboxes/SkyboxDay/top.jpg",
+        assetsDir / "skyboxes/SkyboxDay/bottom.jpg",
+        assetsDir / "skyboxes/SkyboxDay/front.jpg",
+        assetsDir / "skyboxes/SkyboxDay/back.jpg"
     };
-    std::vector<std::string> nightSkyboxFaces = {
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/right.png",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/left.png",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/top.png",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/bottom.png",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/front.png",
-        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/back.png"
+    std::vector<std::filesystem::path> nightSkyboxFaces = {
+        assetsDir / "skyboxes/SkyboxNight/right.png",
+        assetsDir / "skyboxes/SkyboxNight/left.png",
+        assetsDir / "skyboxes/SkyboxNight/top.png",
+        assetsDir / "skyboxes/SkyboxNight/bottom.png",
+        assetsDir / "skyboxes/SkyboxNight/front.png",
+        assetsDir / "skyboxes/SkyboxNight/back.png"
     };
-    Shader skyboxShader(std::string(ASSETS_DIR) + "shaders/skybox.vert", std::string(ASSETS_DIR) + "shaders/skybox.frag");
+    Shader skyboxShader(assetsDir / "shaders/skybox.vert", assetsDir / "shaders/skybox.frag");
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
     Skybox daySkybox(daySkyboxFaces, &skyboxShader, false);
@@ -248,7 +248,7 @@ int main() {
     renderer.setSkybox(&daySkybox);
 
     // ------------------------------------------------------------ Set up mesh, camera and shaders ------------------------------------------------------------
-    Shader shader(std::string(ASSETS_DIR) + "shaders/vertexShader.vert", std::string(ASSETS_DIR) + "shaders/fragmentShader.frag");
+    Shader shader(assetsDir / "shaders/vertexShader.vert", assetsDir / "shaders/fragmentShader.frag");
     ModelLoader loader;
 
     std::unique_ptr<DirectionalLight> dirLight = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(0, -0.4, 1));
@@ -282,7 +282,7 @@ int main() {
 
     bool spotLightEnabled = false;
 
-    std::vector<Mesh> spotCube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader, false);
+    std::vector<Mesh> spotCube = loader.load(assetsDir / "models/Cube.obj", &shader, false);
     if (!spotCube.empty()) {
         spotCube[0].position = spotLight->position;
         spotCube[0].scale = glm::vec3(0.8f);
@@ -293,7 +293,7 @@ int main() {
     }
 
     // Small indicator cubes at the position of each light
-    std::vector<Mesh> redCube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader, false);
+    std::vector<Mesh> redCube = loader.load(assetsDir / "models/Cube.obj", &shader, false);
     if (!redCube.empty()) {
         redCube[0].position = redLight->position;
         redCube[0].scale = glm::vec3(1.0f);
@@ -303,7 +303,7 @@ int main() {
         redCube[0].material = mat;
     }
 
-    std::vector<Mesh> greenCube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader, false);
+    std::vector<Mesh> greenCube = loader.load(assetsDir / "models/Cube.obj", &shader, false);
     if (!greenCube.empty()) {
         greenCube[0].position = greenLight->position;
         greenCube[0].scale = glm::vec3(1.0f);
@@ -313,7 +313,7 @@ int main() {
         greenCube[0].material = mat;
     }
 
-    std::vector<Mesh> blueCube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader, false);
+    std::vector<Mesh> blueCube = loader.load(assetsDir / "models/Cube.obj", &shader, false);
     if (!blueCube.empty()) {
         blueCube[0].position = blueLight->position;
         blueCube[0].scale = glm::vec3(1.0f);
@@ -324,24 +324,15 @@ int main() {
     }
 
     // Default cube (floor)
-    std::vector<Mesh> floorCube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader, false);
+    std::vector<Mesh> floorCube = loader.load(assetsDir / "models/Cube.obj", &shader, false);
     if (!floorCube.empty()) {
         floorCube[0].scale = glm::vec3(50.0f, 1.0, 50.0f);
         floorCube[0].position = glm::vec3(0.0f, -11.0f, 0.0f);
         floorCube[0].material->shininess = 64.0f;
     }
 
-    std::vector<ModelEntry> scannedModels = scanModelFiles(ASSETS_DIR);
+    std::vector<ModelEntry> scannedModels = scanModelFiles(assetsDir);
     int selectedModelIndex = -1;
-    for (int i = 0; i < (int)scannedModels.size(); ++i) {
-        if (scannedModels[i].displayName.find("Tokyo") != std::string::npos) {
-            selectedModelIndex = i;
-            break;
-        }
-    }
-    if (selectedModelIndex == -1 && !scannedModels.empty()) {
-        selectedModelIndex = 0;
-    }
 
     bool flipUVs = false;
     glm::vec3 modelPos(0.0f);
@@ -377,7 +368,7 @@ int main() {
 
     auto loadSelectedModel = [&](int index) {
         if (index >= 0 && index < (int)scannedModels.size()) {
-            std::cout << "Loading model: " << scannedModels[index].fullPath << std::endl;
+            std::cout << "Loading model: " << scannedModels[index].fullPath.string() << std::endl;
             ModelLoader modelLoader;
             currentModelMeshes = modelLoader.load(scannedModels[index].fullPath, &shader, flipUVs);
             updateSceneMeshes();
@@ -413,6 +404,18 @@ int main() {
                 : "None";
 
             if (ImGui::BeginCombo("Model", currentPreview)) {
+                bool isNoneSelected = (selectedModelIndex == -1);
+                if (ImGui::Selectable("None", isNoneSelected)) {
+                    if (selectedModelIndex != -1) {
+                        selectedModelIndex = -1;
+                        currentModelMeshes.clear();
+                        updateSceneMeshes();
+                    }
+                }
+                if (isNoneSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+
                 for (int i = 0; i < (int)scannedModels.size(); i++) {
                     const bool isSelected = (selectedModelIndex == i);
                     if (ImGui::Selectable(scannedModels[i].displayName.c_str(), isSelected)) {
@@ -429,9 +432,9 @@ int main() {
             }
 
             if (ImGui::Button("Rescan Models Folder")) {
-                std::string currentSelectedPath = (selectedModelIndex >= 0 && selectedModelIndex < (int)scannedModels.size())
-                    ? scannedModels[selectedModelIndex].fullPath : "";
-                scannedModels = scanModelFiles(ASSETS_DIR);
+                std::filesystem::path currentSelectedPath = (selectedModelIndex >= 0 && selectedModelIndex < (int)scannedModels.size())
+                    ? scannedModels[selectedModelIndex].fullPath : std::filesystem::path();
+                scannedModels = scanModelFiles(assetsDir);
                 selectedModelIndex = -1;
                 for (int i = 0; i < (int)scannedModels.size(); ++i) {
                     if (scannedModels[i].fullPath == currentSelectedPath) {

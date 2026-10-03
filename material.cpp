@@ -8,6 +8,10 @@ Material::Material(float shininess, struct Texture diffuseMap, struct Texture sp
     */
 }
 
+bool operator==(const Texture &t1, const Texture &t2) {
+    return (t1.id == t2.id) && (t1.textureType == t2.textureType) && (t1.path == t2.path);
+}
+
 bool operator==(Texture &t1, Texture &t2) {
     return (t1.id == t2.id) && (t1.textureType == t2.textureType) && (t1.path == t2.path);
 }

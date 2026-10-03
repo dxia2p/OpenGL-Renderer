@@ -12,6 +12,8 @@ _deps
 CMakeUserPresets.json
 .cache/
 build/
+build-windows/
+vcpkg_installed/
 
 # CLion
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

@@ -1,6 +1,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include <filesystem>
 #include <string>
 #include <glm/glm.hpp>
 #include "shader.hpp"
@@ -17,9 +18,10 @@ enum class TextureType {
 struct Texture {
     unsigned int id;
     TextureType textureType;
-    std::string path;
+    std::filesystem::path path;
 };
 
+bool operator==(const Texture &t1, const Texture &t2);
 bool operator==(Texture &t1, Texture &t2);
 
 /*

@@ -11,7 +11,7 @@
 
 namespace {
     // Helper function to read data from a shader file
-    std::string readShader(const std::string &path) {
+    std::string readShader(const std::filesystem::path &path) {
         std::ifstream file;
         std::string fileContents;
 
@@ -25,13 +25,13 @@ namespace {
             stream << file.rdbuf();
             fileContents = stream.str();
         } catch (const std::exception& e) {
-            std::cerr << "Shader file could not be read: " << e.what() << std::endl;
+            std::cerr << "Shader file could not be read at " << path.string() << ": " << e.what() << std::endl;
         }
 
         return fileContents;
     }
 
-    unsigned int createShader(std::string shaderSrcCode, GLenum shaderType, std::string path /* Only used for error reporting */) {
+    unsigned int createShader(std::string shaderSrcCode, GLenum shaderType, const std::filesystem::path &path /* Only used for error reporting */) {
         const char* shaderCStr = shaderSrcCode.c_str();
 
         int success;
@@ -46,16 +46,16 @@ namespace {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(shader, 512, NULL, log);
-            std::cerr << "Error compiling shader at " << path << ':' << log << std::endl;
+            std::cerr << "Error compiling shader at " << path.string() << ':' << log << std::endl;
         }
 
         return shader;
     }
 } // namespace
 
-Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath, const std::string &geometryPath) {
+Shader::Shader(const std::filesystem::path &vertexPath, const std::filesystem::path &fragmentPath, const std::filesystem::path &geometryPath) {
 
-    bool hasGeometryShader = (geometryPath == "") ? false : true;
+    bool hasGeometryShader = !geometryPath.empty();
 
     std::string vShaderContents = readShader(vertexPath);
     std::string fShaderContents = readShader(fragmentPath);

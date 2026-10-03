@@ -1,6 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include <filesystem>
 #include <string>
 
 #include <glm/glm.hpp>
@@ -11,7 +12,7 @@ class Shader {
 public:
     unsigned int ID;
 
-    Shader(const std::string &vertexPath, const std::string &fragmentPath, const std::string &geometryPath = "");
+    Shader(const std::filesystem::path &vertexPath, const std::filesystem::path &fragmentPath, const std::filesystem::path &geometryPath = "");
     //~Shader();
     
     // Activate the shader
