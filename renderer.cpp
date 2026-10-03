@@ -231,6 +231,7 @@ void Renderer::draw(std::vector<Mesh> &meshes, std::vector<Light*> &lights) {
     skybox->shader->use();
     skybox->shader->setMat4("projection", camera->getProjectionMat());
     skybox->shader->setMat4("view", glm::mat4(glm::mat3(camera->getLookatMat())));  // Remove the translation section of the view matrix for skyboxes
+    glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(skybox->getVAO());
     glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->getCubemap());
     glDrawArrays(GL_TRIANGLES, 0, SKYBOX_VERT_COUNT);

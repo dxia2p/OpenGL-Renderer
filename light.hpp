@@ -49,7 +49,7 @@ public:
     LightTypes lightType;
 
     // TODO: Make these vary based on camera properties
-    float nearPlane = 1.0f, farPlane = 50.0f;  
+    float nearPlane = 1.0f, farPlane = 100.0f;  
 
 protected:
     Light(glm::vec3 color, float ambient, float diffuse, float specular, LightTypes lightType) : color(color), ambient(ambient), diffuse(diffuse), specular(specular), lightType(lightType) {}
@@ -87,7 +87,7 @@ public:
         return result;
     }
 
-    float frustumWidth = 20.0f, frustumHeight = 20.0f;
+    float frustumWidth = 50.0f, frustumHeight = 50.0f;
 
     glm::vec3 direction;
 
