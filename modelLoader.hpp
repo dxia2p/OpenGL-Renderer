@@ -14,7 +14,7 @@ class ModelLoader {
 public:
     ModelLoader() {}
     
-    std::vector<Mesh> load(const std::string &path, Shader *defaultShader);
+    std::vector<Mesh> load(const std::string &path, Shader *defaultShader, bool flipUVs);
     Mesh loadCube(Shader *defaultShader);
 private:
     std::unordered_map<std::string, Texture> loadedTextures;

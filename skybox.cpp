@@ -68,7 +68,12 @@ Skybox::Skybox(std::vector<std::string> facePaths, Shader *shader, bool hdr) : s
             return;
         }
 
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, hdr ? GL_RGB : GL_SRGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        GLenum format = GL_RGB;
+        if (numChannels = 4) {
+            format = GL_RGBA;
+        }
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, hdr ? GL_RGB : GL_SRGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         stbi_image_free(data);
     }
 

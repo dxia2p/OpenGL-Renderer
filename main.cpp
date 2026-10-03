@@ -139,22 +139,30 @@ int main() {
     Shader pointShadowShader(std::string(ASSETS_DIR) + "shaders/shadowmap.vert", std::string(ASSETS_DIR) + "shaders/pointShadowmap.frag", std::string(ASSETS_DIR) + "shaders/pointShadowmap.geom");
     Renderer renderer(directionalShadowShader, pointShadowShader, windowWidth, windowHeight);
     // ------------------------------------------------------------ Set up skybox ------------------------------------------------------------
-    std::vector<std::string> skyboxFaces = {
-        std::string(ASSETS_DIR) + "skyboxes/skybox/right.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/skybox/left.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/skybox/top.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/skybox/bottom.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/skybox/front.jpg",
-        std::string(ASSETS_DIR) + "skyboxes/skybox/back.jpg"
+    std::vector<std::string> daySkyboxFaces = {
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/right.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/left.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/top.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/bottom.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/front.jpg",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxDay/back.jpg"
+    };
+    std::vector<std::string> nightSkyboxFaces = {
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/right.png",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/left.png",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/top.png",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/bottom.png",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/front.png",
+        std::string(ASSETS_DIR) + "skyboxes/SkyboxNight/back.png"
     };
     Shader skyboxShader(std::string(ASSETS_DIR) + "shaders/skybox.vert", std::string(ASSETS_DIR) + "shaders/skybox.frag");
-    Skybox skybox(skyboxFaces, &skyboxShader, false);
+    Skybox skybox(nightSkyboxFaces, &skyboxShader, false);
     renderer.setSkybox(&skybox);
 
     // ------------------------------------------------------------ Set up mesh, camera and shaders ------------------------------------------------------------
     Shader shader(std::string(ASSETS_DIR) + "shaders/vertexShader.vert", std::string(ASSETS_DIR) + "shaders/fragmentShader.frag");
     ModelLoader loader;
-    std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/backpack/backpack.obj", &shader);
+    std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/Tokyo/scene.gltf", &shader, false);
     std::unique_ptr<DirectionalLight> dirLight = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(0, -0.4, 1));
     // std::unique_ptr<DirectionalLight> dirLight2 = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(1, -0.4, 0));
     std::unique_ptr<PointLight> pointLight1 =  std::make_unique<PointLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(4, 6, 1), 0.045, 0.0075);
@@ -164,14 +172,14 @@ int main() {
     std::vector<Light *> lights = {dirLight.get(), pointLight1.get(), /*pointLight2.get()*/ /*spotLight.get()*//*, flashlight.get()*/};
 
     // Default cube
-    std::vector<Mesh> cube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader);
+    std::vector<Mesh> cube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader, false);
     cube[0].scale = glm::vec3(30.0f, 1.0, 30.0f);
     cube[0].position = glm::vec3(0.0f, -4.0f, 0.0f);
     // cube[0].rotation = glm::quat(glm::vec3(0.0f, 0.0, glm::radians(30.0f)));
     cube[0].material->shininess = 64.0f;
     meshes.insert(meshes.end(), cube.begin(), cube.end());
 
-    std::vector<Mesh> cube1 = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader);
+    std::vector<Mesh> cube1 = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader, false);
     cube1[0].position = spotLight->position;
     meshes.insert(meshes.end(), cube1.begin(), cube1.end());
 

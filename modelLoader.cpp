@@ -41,6 +41,7 @@ unsigned int textureFromFile(std::string path, bool srgb) {
         case 4:
             format = GL_RGBA;
             internalFormat = srgb ? GL_SRGB_ALPHA : GL_RGBA;
+            break;
         default:
             std::cerr << "Invalid number of channels (" << numChannels << ") in textureFromFile()" << std::endl;
     }
@@ -125,9 +126,11 @@ unsigned int textureFromFile(std::string path, bool srgb) {
 // }
 
 
-std::vector<Mesh> ModelLoader::load(const std::string &path, Shader *defaultShader) {
+std::vector<Mesh> ModelLoader::load(const std::string &path, Shader *defaultShader, bool flipUVs) {
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    unsigned int flags = aiProcess_Triangulate |  aiProcess_PreTransformVertices;
+    if (flipUVs) flags |= aiProcess_FlipUVs;
+    const aiScene *scene = importer.ReadFile(path, flags);
     if (scene == nullptr) {
         std::cerr << "Error loading model at: " + path << std::endl;
         return std::vector<Mesh>();
