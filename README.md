@@ -14,6 +14,9 @@ This is a simple 3d renderer using OpenGL that I have been working on as a hobby
     - Cubemap skybox rendering
    
 ## Planned Features
+  - **Improved Shadows**:
+    - Soft shadows
+    - Better shadow bias calculations to mitigate shadow acne
   - **Physically Based Rendering (PBR)**
   - **Cascaded Shadow Maps (CSM)**
   - **Post-Processing**
