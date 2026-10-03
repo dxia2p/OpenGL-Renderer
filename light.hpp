@@ -20,6 +20,7 @@ struct LightData {  // Needs to be aligned to 16 byte boundaries because we use 
     alignas(16) glm::vec3 color;
     alignas(16) glm::vec4 ambientDiffuseSpecularLightType;  // Multipliers for ambient, diffuse and specular, w = light type (follows enum class LightTypes)
     alignas(16) glm::vec4 cutoffsAndAttenuation;  // x is inner cutoff (radians), y is outer cutoff (radians), z is linear term for attenuation equation, w is quadratic term
+    alignas(16) glm::vec4 nearFarPlane;  // x = nearPlane, y = farPlane, z and w are padding
 };
 
 // Returns a lightData object that represents a light that doesn't exist
@@ -69,6 +70,7 @@ public:
         result.color = color;
         result.ambientDiffuseSpecularLightType = glm::vec4(ambient, diffuse, specular, lightType);
         result.cutoffsAndAttenuation = glm::vec4(0);
+        result.nearFarPlane = glm::vec4(nearPlane, farPlane, 0, 0);
         return result;
     }
 
@@ -103,12 +105,20 @@ public:
         result.color = color;
         result.ambientDiffuseSpecularLightType = glm::vec4(ambient, diffuse, specular, lightType);
         result.cutoffsAndAttenuation = glm::vec4(0, 0, linear, quadratic);
+        result.nearFarPlane = glm::vec4(nearPlane, farPlane, 0, 0);
         return result;
     }
 
     std::vector<glm::mat4> getViewAndProjectionMatrices(Camera &camera) const override {
         std::vector<glm::mat4> result;
+        glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, nearPlane, farPlane);
 
+        result.push_back(proj * glm::lookAt(position, position + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        result.push_back(proj * glm::lookAt(position, position + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        result.push_back(proj * glm::lookAt(position, position + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+        result.push_back(proj * glm::lookAt(position, position + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
+        result.push_back(proj * glm::lookAt(position, position + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+        result.push_back(proj * glm::lookAt(position, position + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
         return result;
     }
 
@@ -120,6 +130,10 @@ private:
 
 class SpotLight : public Light {
 public:
+    /**
+     * @param innerCutoff The RADIUS (NOT DIAMETER) of the inner cutoff for the spot light's "soft" edge in radians
+     * @param outerCutoff The RADIUS (NOT DIAMETER) of the outer cutoff for the spot light's "soft" edge in radians
+     */
     SpotLight(glm::vec3 color, float ambient, float diffuse, float specular, glm::vec3 position, glm::vec3 direction, float linear, float quadratic, float innerCutoff, float outerCutoff) : Light(color, ambient, diffuse, specular, LightTypes::SPOT), position(position), direction(direction), linear(linear), quadratic(quadratic), innerCutoff(innerCutoff), outerCutoff(outerCutoff) {}
 
     LightData generateLightData() const override {
@@ -129,6 +143,7 @@ public:
         result.color = color;
         result.ambientDiffuseSpecularLightType = glm::vec4(ambient, diffuse, specular, lightType);
         result.cutoffsAndAttenuation = glm::vec4(innerCutoff, outerCutoff, linear, quadratic);
+        result.nearFarPlane = glm::vec4(nearPlane, farPlane, 0, 0);
         return result;
     }
 

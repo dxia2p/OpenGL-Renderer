@@ -15,19 +15,22 @@
 #include "shader.hpp"
 #include "renderer.hpp"
 #include "skybox.hpp"
+#include "window.hpp"
 
 float deltaTime = 0;
 float prevTime = 0;
 bool holdingRightClick = false;
 
-Camera cam(glm::vec3(0, 0, 5), 800.0/600);
+int windowWidth = 800, windowHeight = 600;
+
+Camera cam(glm::vec3(0, 0, 5), ((float)windowWidth)/windowHeight);
 
 std::string glmVec3ToString(glm::vec3 v) {
     return std::to_string(v.x) + ", " + std::to_string(v.y) + ", " + std::to_string(v.z);
 }
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
-    glViewport(0, 0, width, height);
+    windowWidth = width, windowHeight = height;
 }
 
 void processInput(GLFWwindow *window) {
@@ -46,7 +49,7 @@ void processInput(GLFWwindow *window) {
     }
 
     // Camera keyboard movement
-    float cameraSpeed = 4.0f;
+    float cameraSpeed = 10.0f;
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         cam.position += cam.getFront() * deltaTime * cameraSpeed;       
     }
@@ -110,30 +113,15 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
 }
 
 int main() {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
     #ifdef DEBUG_MODE
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+    bool debug = true;
+    #else
+    bool debug = false;
     #endif
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "Test", NULL, NULL);
-    if (window == NULL) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+    GLFWwindow *window = createGLFWWindow(windowWidth, windowHeight, "Hello", debug);
 
     #ifdef DEBUG_MODE
-
     int flags; 
     glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
     if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
@@ -142,15 +130,14 @@ int main() {
         glDebugMessageCallback(glDebugOutput, nullptr);
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     }
-
     #endif
 
-    glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetCursorPosCallback(window, mouseCallback);
 
-    Shader shadowShader(std::string(ASSETS_DIR) + "shaders/shadowmap.vert", std::string(ASSETS_DIR) + "shaders/shadowmap.frag", std::string(ASSETS_DIR) + "shaders/shadowmapSingleDir.geom");
-    Renderer renderer(shadowShader);
+    Shader directionalShadowShader(std::string(ASSETS_DIR) + "shaders/shadowmap.vert", std::string(ASSETS_DIR) + "shaders/directionalShadowmap.frag", std::string(ASSETS_DIR) + "shaders/directionalShadowmap.geom");
+    Shader pointShadowShader(std::string(ASSETS_DIR) + "shaders/shadowmap.vert", std::string(ASSETS_DIR) + "shaders/pointShadowmap.frag", std::string(ASSETS_DIR) + "shaders/pointShadowmap.geom");
+    Renderer renderer(directionalShadowShader, pointShadowShader, windowWidth, windowHeight);
     // ------------------------------------------------------------ Set up skybox ------------------------------------------------------------
     std::vector<std::string> skyboxFaces = {
         std::string(ASSETS_DIR) + "skyboxes/skybox/right.jpg",
@@ -168,13 +155,13 @@ int main() {
     Shader shader(std::string(ASSETS_DIR) + "shaders/vertexShader.vert", std::string(ASSETS_DIR) + "shaders/fragmentShader.frag");
     ModelLoader loader;
     std::vector<Mesh> meshes = loader.load(std::string(ASSETS_DIR) + "models/backpack/backpack.obj", &shader);
-    //std::unique_ptr<DirectionalLight> dirLight = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(0, -0.4, 1));
+    std::unique_ptr<DirectionalLight> dirLight = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(0, -0.4, 1));
     // std::unique_ptr<DirectionalLight> dirLight2 = std::make_unique<DirectionalLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(1, -0.4, 0));
-    std::unique_ptr<PointLight> pointLight1 =  std::make_unique<PointLight>(glm::vec3(0, 1, 0), 0.1f, 0.7f, 0.3f, glm::vec3(4, 0, 1), 0.045, 0.0075);
-    std::unique_ptr<PointLight> pointLight2 = std::make_unique<PointLight>(glm::vec3(1, 0, 0), 0.1f, 0.7f, 0.3f, glm::vec3(-4, 0, 1), 0.045, 0.0075);
+    std::unique_ptr<PointLight> pointLight1 =  std::make_unique<PointLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(4, 6, 1), 0.045, 0.0075);
+    //std::unique_ptr<PointLight> pointLight2 = std::make_unique<PointLight>(glm::vec3(1, 0, 0), 0.1f, 0.7f, 0.3f, glm::vec3(-4, 0, 1), 0.045, 0.0075);
     //std::unique_ptr<SpotLight> flashlight = std::make_unique<SpotLight>(glm::vec3(1, 1, 1), 0.1f, 0.8f, 0.3f, cam.position, cam.getFront(), 0.014, 0.0007, glm::radians(12.0f), glm::radians(15.0f));
     std::unique_ptr<SpotLight> spotLight = std::make_unique<SpotLight>(glm::vec3(1, 1, 1), 0.1f, 0.7f, 0.3f, glm::vec3(0, 4, 5), glm::vec3(0, -1, -1), 0.014, 0.0007, glm::radians(12.0f), glm::radians(15.0f));
-    std::vector<Light *> lights = {/*dirLight.get(), */pointLight1.get(), pointLight2.get(), spotLight.get()/*, flashlight.get()*/};
+    std::vector<Light *> lights = {dirLight.get(), pointLight1.get(), /*pointLight2.get()*/ /*spotLight.get()*//*, flashlight.get()*/};
 
     // Default cube
     std::vector<Mesh> cube = loader.load(std::string(ASSETS_DIR) + "models/Cube.obj", &shader);
@@ -205,6 +192,8 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        renderer.windowHeight = windowHeight;
+        renderer.windowWidth = windowWidth;
         renderer.draw(meshes, lights);
 
         glfwSwapBuffers(window);
